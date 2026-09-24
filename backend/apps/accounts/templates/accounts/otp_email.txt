@@ -1,0 +1,8 @@
+{% autoescape off %}
+{{ user.get_username }},
+Use the OTP below to reset your TripGo password:
+
+{{ otp }}
+
+This code is valid for 10 minutes.
+{% endautoescape %}

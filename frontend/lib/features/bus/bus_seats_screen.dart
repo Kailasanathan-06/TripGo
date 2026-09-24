@@ -1,0 +1,1 @@
+export '../bus/bus_details_screen.dart' show BusSeatsScreen;

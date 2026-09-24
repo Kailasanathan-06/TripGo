@@ -1,0 +1,1 @@
+export '../train/train_details_screen.dart' show TrainCoachesScreen;
