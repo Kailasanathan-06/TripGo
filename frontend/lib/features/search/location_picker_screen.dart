@@ -11,6 +11,7 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/services/services.dart';
 import '../../shared/widgets/feedback.dart';
+import '../../shared/widgets/fields.dart';
 import '../../shared/widgets/misc.dart';
 
 class LocationPickerScreen extends ConsumerStatefulWidget {

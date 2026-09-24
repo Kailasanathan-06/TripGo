@@ -13,7 +13,7 @@ class TripGoApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(settingsProvider);
-    final brightness = MediaQuery.platformBrightnessOf(context);
+    final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
 
     return MaterialApp.router(
       title: AppConstants.appName,

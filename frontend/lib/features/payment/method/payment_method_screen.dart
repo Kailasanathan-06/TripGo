@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
-import '../../core/utils/formatters.dart';
-import '../../shared/models/models.dart';
-import '../../shared/providers/providers.dart';
-import '../../shared/widgets/buttons.dart';
-import '../../shared/widgets/cards.dart';
-import '../../shared/widgets/misc.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/formatters.dart';
+import '../../../shared/models/models.dart';
+import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/cards.dart';
+import '../../../shared/widgets/misc.dart';
 
 class PaymentMethodScreen extends ConsumerWidget {
   const PaymentMethodScreen({super.key});
