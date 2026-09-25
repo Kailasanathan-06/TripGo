@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
@@ -11,7 +10,6 @@ import '../../shared/providers/providers.dart';
 import '../../shared/services/services.dart';
 import '../../shared/widgets/cards.dart';
 import '../../shared/widgets/feedback.dart';
-import '../../shared/widgets/misc.dart';
 
 class InboxScreen extends ConsumerWidget {
   const InboxScreen({super.key});

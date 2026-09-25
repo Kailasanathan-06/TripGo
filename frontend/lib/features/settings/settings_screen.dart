@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/providers/providers.dart';
@@ -35,22 +34,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 Text('Appearance', style: AppTypography.headingStyle),
                 const SizedBox(height: AppSpacing.md),
-                for (final (mode, label, icon) in [
-                  (AppThemeMode.light, 'Light', Icons.light_mode_outlined),
-                  (AppThemeMode.dark, 'Dark', Icons.dark_mode_outlined),
-                  (AppThemeMode.system, 'System default', Icons.settings_suggest_outlined),
-                ])
-                  RadioListTile<AppThemeMode>(
-                    contentPadding: EdgeInsets.zero,
-                    value: mode,
-                    groupValue: themeMode,
-                    activeColor: AppColors.royalBlue,
-                    secondary: Icon(icon, color: AppColors.royalBlue),
-                    title: Text(label, style: AppTypography.bodyStyle),
-                    onChanged: (m) {
-                      if (m != null) ref.read(settingsProvider.notifier).set(m);
-                    },
+                RadioGroup<AppThemeMode>(
+                  groupValue: themeMode,
+                  onChanged: (m) {
+                    if (m != null) ref.read(settingsProvider.notifier).set(m);
+                  },
+                  child: Column(
+                    children: [
+                      for (final (mode, label, icon) in [
+                        (AppThemeMode.light, 'Light', Icons.light_mode_outlined),
+                        (AppThemeMode.dark, 'Dark', Icons.dark_mode_outlined),
+                        (AppThemeMode.system, 'System default', Icons.settings_suggest_outlined),
+                      ])
+                        RadioListTile<AppThemeMode>(
+                          contentPadding: EdgeInsets.zero,
+                          value: mode,
+                          activeColor: AppColors.royalBlue,
+                          secondary: Icon(icon, color: AppColors.royalBlue),
+                          title: Text(label, style: AppTypography.bodyStyle),
+                        ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
@@ -93,7 +98,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const Center(child: Text('Made with care for easier journeys.', style: AppTypography.captionStyle)),
+          Center(child: Text('Made with care for easier journeys.', style: AppTypography.captionStyle)),
         ],
       ),
     );

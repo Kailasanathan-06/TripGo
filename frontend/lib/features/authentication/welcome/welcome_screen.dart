@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/buttons.dart';
@@ -23,7 +22,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   static const _benefits = [
     (icon: Icons.directions_bus_filled, title: 'Book Bus Tickets', subtitle: 'AC & Non-AC sleeper, seater and premium buses across India with live seat selection.'),
-    (icon: Icons.train_rounded, title: 'Book Train Tickets', subtitle: 'Search trains, pick your coach and choose your berth — SL, 3A, 2A, 1A, CC and 2S.'),
+    (icon: Icons.train_rounded, title: 'Book Train Tickets', subtitle: 'Search trains, pick your coach and choose your berth â€” SL, 3A, 2A, 1A, CC and 2S.'),
     (icon: Icons.qr_code_2_rounded, title: 'Instant e-Tickets', subtitle: 'Pay instantly, get your PNR, e-ticket and scannable QR. Download your PDF ticket offline.'),
   ];
 
@@ -116,7 +115,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     const SizedBox(height: AppSpacing.md),
                     TextButton(
                       onPressed: () => context.go('/login'),
-                      child: Text('I already have an account · Login', style: AppTypography.bodyMedium.copyWith(color: AppColors.lightBlue)),
+                      child: Text('I already have an account Â· Login', style: AppTypography.bodyMedium.copyWith(color: AppColors.lightBlue)),
                     ),
                   ],
                 ),

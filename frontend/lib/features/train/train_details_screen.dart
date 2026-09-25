@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
@@ -67,7 +66,7 @@ class _TrainDetailsScreenState extends ConsumerState<TrainDetailsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${train.number} · ${train.name}', style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
+                            Text('${train.number} Â· ${train.name}', style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
                             const SizedBox(height: 4),
                             Row(
                               children: [
@@ -92,7 +91,7 @@ class _TrainDetailsScreenState extends ConsumerState<TrainDetailsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 6),
-                                  Text('${schedule.durationText} · ${schedule.distanceKm.toStringAsFixed(0)} km', style: AppTypography.captionStyle),
+                                  Text('${schedule.durationText} Â· ${schedule.distanceKm.toStringAsFixed(0)} km', style: AppTypography.captionStyle),
                                   const SizedBox(height: 6),
                                   Row(
                                     children: [
@@ -231,7 +230,7 @@ class _TrainCoachesScreenState extends ConsumerState<TrainCoachesScreen> {
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              Text('${schedule.train.name} · ${schedule.train.number}', style: AppTypography.captionStyle),
+              Text('${schedule.train.name} Â· ${schedule.train.number}', style: AppTypography.captionStyle),
               const SizedBox(height: AppSpacing.md),
               for (final coach in classes)
                 Padding(
@@ -245,7 +244,7 @@ class _TrainCoachesScreenState extends ConsumerState<TrainCoachesScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${_fullClass(coach.coachClass)}', style: AppTypography.headingStyle),
+                              Text(_fullClass(coach.coachClass), style: AppTypography.headingStyle),
                               const SizedBox(height: 4),
                               Text('${coach.available} berths available', style: AppTypography.captionStyle.copyWith(color: coach.available > 0 ? AppColors.success : AppColors.error)),
                             ],
@@ -324,7 +323,7 @@ class _TrainBerthsScreenState extends ConsumerState<TrainBerthsScreen> {
       coachId: widget.coachId,
       vehicleName: sc.train.name,
       vehicleNumber: sc.train.number,
-      route: '${sc.sourceStationName} → ${sc.destinationStationName}',
+      route: '${sc.sourceStationName} â†’ ${sc.destinationStationName}',
       travelDateLabel: formatShortDate(query.date),
       departure: sc.sourceStationCode.isEmpty ? sc.sourceStationName : sc.sourceStationCode,
       arrival: sc.destinationStationCode.isEmpty ? sc.destinationStationName : sc.destinationStationCode,
@@ -354,12 +353,12 @@ class _TrainBerthsScreenState extends ConsumerState<TrainBerthsScreen> {
           final berths = data.berths;
           return Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: AppSpacing.lg,
-                  children: const [
+                  children: [
                     Text('Coach berth map', style: TextStyle(fontWeight: FontWeight.w600)),
                   ],
                 ),
@@ -423,7 +422,7 @@ class _SeatSummaryBar extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(formatMoney(fare * count), style: AppTypography.titleStyle),
-                  Text('$count of $passengers selected · $coachLabel', style: AppTypography.captionStyle),
+                  Text('$count of $passengers selected Â· $coachLabel', style: AppTypography.captionStyle),
                 ],
               ),
             ),

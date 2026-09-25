@@ -25,13 +25,10 @@ import '../../features/search/location_picker_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/bus/bus_results_screen.dart';
-import '../../features/bus/bus_seats_screen.dart';
-import '../../features/train/train_results_screen.dart';
-import '../../features/train/train_coaches_screen.dart';
-import '../../features/train/train_berths_screen.dart';
 import '../../features/train/train_details_screen.dart';
 import '../../features/bus/bus_details_screen.dart';
 import '../../features/ticket/e_ticket_screen.dart';
+import '../../shared/providers/providers.dart';
 import '../../shared/widgets/misc.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {

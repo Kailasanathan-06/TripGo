@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -37,6 +36,10 @@ class TripGoTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyle = AppTypography.bodyStyle.copyWith(
+      color: isDark ? const Color(0xFFF1F5F9) : AppColors.textPrimary,
+    );
     return TextFormField(
       controller: controller,
       initialValue: controller == null ? initialValue : null,
@@ -52,7 +55,7 @@ class TripGoTextField extends StatelessWidget {
         hintText: hint,
         prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 20, color: AppColors.textSecondary),
       ),
-      style: AppTypography.bodyStyle,
+      style: textStyle,
     );
   }
 }

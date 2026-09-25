@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
@@ -69,7 +68,7 @@ class _BusDetailsScreenState extends ConsumerState<BusDetailsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${bus.operator} · ${bus.busType.replaceAll('_', ' ')}',
+                            Text('${bus.operator} Â· ${bus.busType.replaceAll('_', ' ')}',
                                 style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
                             const SizedBox(height: 4),
                             Text(bus.name, style: AppTypography.captionStyle.copyWith(color: AppColors.lightBlue)),
@@ -77,7 +76,7 @@ class _BusDetailsScreenState extends ConsumerState<BusDetailsScreen> {
                             Row(
                               children: [
                                 const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-                                Text(' ${bus.rating.toStringAsFixed(1)} · ${schedule.reviewsCount} reviews',
+                                Text(' ${bus.rating.toStringAsFixed(1)} Â· ${schedule.reviewsCount} reviews',
                                     style: AppTypography.smallStyle.copyWith(color: AppColors.white)),
                               ],
                             ),
@@ -224,7 +223,7 @@ class _BusSeatsScreenState extends ConsumerState<BusSeatsScreen> {
         scheduleId: schedule.id,
         vehicleName: schedule.bus.name,
         vehicleNumber: schedule.sourceCity,
-        route: '${schedule.sourceCity} → ${schedule.destinationCity}',
+        route: '${schedule.sourceCity} â†’ ${schedule.destinationCity}',
         travelDateLabel: formatShortDate(query.date),
         departure: formatTime(schedule.boardingTime),
         arrival: formatTime(schedule.droppingTime),
@@ -244,7 +243,7 @@ class _BusSeatsScreenState extends ConsumerState<BusSeatsScreen> {
     final passengers = ref.watch(searchProvider).passengers;
 
     return Scaffold(
-      appBar: TripGoAppBar(title: 'Select seats'),
+      appBar: const TripGoAppBar(title: 'Select seats'),
       body: FutureBuilder<List<BusSeatModel>>(
         future: _future,
         builder: (context, snapshot) {
@@ -382,10 +381,10 @@ class _DeckSection extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       for (final seat in seats.where((s) => s.row == row).take(2))
-                        _seatWidget(ref, seat),
+                        _seatWidget(context, ref, seat),
                       const SizedBox(width: AppSpacing.xl),
                       for (final seat in seats.where((s) => s.row == row).skip(2))
-                        _seatWidget(ref, seat),
+                        _seatWidget(context, ref, seat),
                     ],
                   ),
                 ),
@@ -397,7 +396,7 @@ class _DeckSection extends ConsumerWidget {
     );
   }
 
-  Widget _seatWidget(WidgetRef ref, BusSeatModel seat) {
+  Widget _seatWidget(BuildContext context, WidgetRef ref, BusSeatModel seat) {
     final flow = ref.watch(bookingFlowProvider);
     final selected = flow?.selectedSeats.contains(seat.label) ?? false;
     return TripGoSeat(

@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../shared/models/models.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
@@ -46,7 +44,6 @@ class _PaymentWebScreenState extends ConsumerState<PaymentWebScreen> {
   @override
   Widget build(BuildContext context) {
     final amount = ref.watch(paymentAmountProvider);
-    final method = ref.watch(paymentMethodProvider);
 
     return Scaffold(
       appBar: const TripGoAppBar(title: 'Checkout'),
@@ -70,7 +67,7 @@ class _PaymentWebScreenState extends ConsumerState<PaymentWebScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_method == 'card' ? 'Card details' : ('Net banking / ' + _method), style: AppTypography.headingStyle),
+                      Text(_method == 'card' ? 'Card details' : ('Net banking / $_method'), style: AppTypography.headingStyle),
                       const SizedBox(height: AppSpacing.md),
                       if (_method == 'card') ...[
                         TripGoTextField(
@@ -86,13 +83,13 @@ class _PaymentWebScreenState extends ConsumerState<PaymentWebScreen> {
                             Expanded(child: TripGoTextField(label: 'Expiry', controller: _expiry, hint: 'MM/YY')),
                             const SizedBox(width: AppSpacing.md),
                             Expanded(
-                              child: TripGoTextField(label: 'CVV', controller: _cvv, hint: '•••', obscure: true, keyboardType: TextInputType.number),
+                              child: TripGoTextField(label: 'CVV', controller: _cvv, hint: 'Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢', obscure: true, keyboardType: TextInputType.number),
                             ),
                           ],
                         ),
                       ] else ...[
                         DropdownButtonFormField<String>(
-                          value: _method,
+                          initialValue: _method,
                           decoration: const InputDecoration(labelText: 'Select bank'),
                           items: const [
                             DropdownMenuItem(value: 'bank1', child: Text('SBI Bank')),
@@ -105,9 +102,9 @@ class _PaymentWebScreenState extends ConsumerState<PaymentWebScreen> {
                       const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
-                          const Icon(Icons.failed_outlined, color: AppColors.cyan, size: 18),
+                          const Icon(Icons.error_outline, color: AppColors.cyan, size: 18),
                           const SizedBox(width: AppSpacing.sm),
-                          const Expanded(child: Text('Demo lab: toggle failure to test the cancelled/refund path.', style: AppTypography.smallStyle)),
+                          Expanded(child: Text('Demo lab: toggle failure to test the cancelled/refund path.', style: AppTypography.smallStyle)),
                         ],
                       ),
                       SwitchListTile(

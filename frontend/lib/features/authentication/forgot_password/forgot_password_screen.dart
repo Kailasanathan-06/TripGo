@@ -5,7 +5,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/services/services.dart';
 import '../../../shared/widgets/buttons.dart';
-import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/fields.dart';
 import '../auth_scaffold.dart';
 
@@ -84,7 +83,7 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    final extra = ModalRoute.of(context)?.settings.extra;
+    final extra = GoRouterState.of(context).extra;
     _email = TextEditingController(text: extra is String ? extra : '');
   }
 

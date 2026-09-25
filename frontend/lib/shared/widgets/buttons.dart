@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -87,14 +86,14 @@ class TripGoStatusChip extends StatelessWidget {
   factory TripGoStatusChip.fromState(String state) {
     switch (state.toUpperCase()) {
       case 'CONFIRMED':
-        return TripGoStatusChip(label: 'Confirmed', color: AppColors.success);
+        return const TripGoStatusChip(label: 'Confirmed', color: AppColors.success);
       case 'CANCELLED':
-        return TripGoStatusChip(label: 'Cancelled', color: AppColors.error);
+        return const TripGoStatusChip(label: 'Cancelled', color: AppColors.error);
       case 'HELD':
       case 'PAYMENT_PENDING':
-        return TripGoStatusChip(label: 'Payment Pending', color: AppColors.warning);
+        return const TripGoStatusChip(label: 'Payment Pending', color: AppColors.warning);
       case 'EXPIRED':
-        return TripGoStatusChip(label: 'Expired', color: AppColors.textSecondary);
+        return const TripGoStatusChip(label: 'Expired', color: AppColors.textSecondary);
       default:
         return TripGoStatusChip(label: state, color: AppColors.electricBlue);
     }

@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/validators.dart';
 import '../../shared/models/models.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/widgets/buttons.dart';
+import '../../shared/widgets/cards.dart';
 import '../../shared/widgets/fields.dart';
 import '../../shared/widgets/misc.dart';
 
@@ -24,7 +24,7 @@ class _PassengerScreenState extends ConsumerState<PassengerScreen> {
   final _formKeys = <GlobalKey<FormState>>[];
   final _controllers = <List<TextEditingController>>[];
   final _genders = <String>[];
-  var _idType = 'Aadhaar';
+  final _idType = 'Aadhaar';
 
   @override
   void initState() {
@@ -99,7 +99,7 @@ class _PassengerScreenState extends ConsumerState<PassengerScreen> {
                 border: Border.all(color: AppColors.royalBlue.withValues(alpha: 0.2)),
               ),
               child: Text(
-                '${flow.route}\n${flow.travelDateLabel} · ${flow.selectedSeats.join(', ')}',
+                '${flow.route}\n${flow.travelDateLabel} Â· ${flow.selectedSeats.join(', ')}',
                 style: AppTypography.captionStyle,
                 maxLines: 2,
               ),

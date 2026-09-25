@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 import 'app_radius.dart';
-import 'app_shadows.dart';
 import 'app_typography.dart';
 
 class AppTheme {

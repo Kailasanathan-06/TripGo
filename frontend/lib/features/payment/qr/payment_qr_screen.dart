@@ -70,9 +70,9 @@ class _PaymentQrScreenState extends ConsumerState<PaymentQrScreen> {
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    const Icon(Icons.failed_outlined, color: AppColors.cyan, size: 18),
+                    const Icon(Icons.error_outline, color: AppColors.cyan, size: 18),
                     const SizedBox(width: AppSpacing.sm),
-                    const Expanded(child: Text('Demo lab: toggle failure to test the cancelled/refund path.', style: AppTypography.smallStyle)),
+                    Expanded(child: Text('Demo lab: toggle failure to test the cancelled/refund path.', style: AppTypography.smallStyle)),
                   ],
                 ),
                 SwitchListTile(

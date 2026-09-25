@@ -3,14 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
+import '../../shared/models/models.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/widgets/buttons.dart';
 import '../../shared/widgets/cards.dart';
-import '../../shared/widgets/feedback.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -213,11 +212,11 @@ class _SearchWidget extends StatelessWidget {
           ),
           Row(
             children: [
-              Icon(Icons.calendar_month_rounded, size: 18, color: AppColors.textSecondary),
+              const Icon(Icons.calendar_month_rounded, size: 18, color: AppColors.textSecondary),
               const SizedBox(width: AppSpacing.sm),
               Text(formatShortDate(query.date), style: AppTypography.smallStyle),
               const SizedBox(width: AppSpacing.lg),
-              Icon(Icons.person_outline_rounded, size: 18, color: AppColors.textSecondary),
+              const Icon(Icons.person_outline_rounded, size: 18, color: AppColors.textSecondary),
               const SizedBox(width: AppSpacing.sm),
               Text('${query.passengers} passenger${query.passengers > 1 ? 's' : ''}', style: AppTypography.smallStyle),
             ],
@@ -319,7 +318,7 @@ class _OfferPromoCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [AppColors.deepBlue, AppColors.royalBlue]),
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        boxShadow: [AppShadows.card],
+        boxShadow: const [AppShadows.card],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

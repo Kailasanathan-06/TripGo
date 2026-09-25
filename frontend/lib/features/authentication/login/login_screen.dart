@@ -22,7 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _email;
   late final TextEditingController _password;
-  var _obscure = true;
+  final _obscure = true;
 
   @override
   void initState() {
@@ -71,6 +71,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: AuthScaffold(
         title: 'Welcome back',
         subtitle: 'Login to book your next journey with TripGo.',
+        footer: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('New to TripGo?', style: AppTypography.captionStyle),
+            TextButton(onPressed: () => context.go('/register'), child: const Text('Create account')),
+          ],
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -128,13 +135,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ],
           ),
-        ),
-        footer: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('New to TripGo?', style: AppTypography.captionStyle),
-            TextButton(onPressed: () => context.go('/register'), child: const Text('Create account')),
-          ],
         ),
       ),
     );

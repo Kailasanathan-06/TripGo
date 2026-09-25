@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
@@ -75,7 +74,7 @@ class _BusSearchResultsScreenState extends ConsumerState<BusSearchResultsScreen>
                     children: [
                       Expanded(
                         child: Text(
-                          '${sorted.length} bus${sorted.length > 1 ? 'es' : ''} · ${query.source} → ${query.destination}',
+                          '${sorted.length} bus${sorted.length > 1 ? 'es' : ''} Â· ${query.source} â†’ ${query.destination}',
                           style: AppTypography.captionStyle,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -137,7 +136,7 @@ class _BusSearchResultsScreenState extends ConsumerState<BusSearchResultsScreen>
                           onChanged: (v) => setSheetState(() => _filters.maxPrice = v),
                         ),
                       ),
-                      Text('Up to ${formatMoney(_filters.maxPrice)}, ${count} matches',
+                      Text('Up to ${formatMoney(_filters.maxPrice)}, $count matches',
                           style: AppTypography.captionStyle),
                       const SizedBox(height: AppSpacing.lg),
                       Text('Bus type', style: AppTypography.labelStyle),
@@ -179,7 +178,7 @@ class _BusSearchResultsScreenState extends ConsumerState<BusSearchResultsScreen>
                         children: [
                           for (final r in [0.0, 3.5, 4.0, 4.5])
                             FilterChip(
-                              label: Text(r == 0 ? 'Any' : '${r}+'),
+                              label: Text(r == 0 ? 'Any' : '$r+'),
                               selected: _filters.minRating == r,
                               onSelected: (_) => setSheetState(() => _filters.minRating = r),
                             ),
@@ -235,7 +234,7 @@ class TrainSearchResultsScreen extends ConsumerStatefulWidget {
 }
 
 class _TrainSearchResultsScreenState extends ConsumerState<TrainSearchResultsScreen> {
-  List<String> _classes = [];
+  final List<String> _classes = [];
 
   List<TrainScheduleModel> _apply(List<TrainScheduleModel> all) {
     if (_classes.isEmpty) return all;
@@ -269,7 +268,7 @@ class _TrainSearchResultsScreenState extends ConsumerState<TrainSearchResultsScr
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
                   child: Text(
-                    '${sorted.length} train${sorted.length > 1 ? 's' : ''} · ${query.source} → ${query.destination}',
+                    '${sorted.length} train${sorted.length > 1 ? 's' : ''} Â· ${query.source} â†’ ${query.destination}',
                     style: AppTypography.captionStyle,
                   ),
                 ),

@@ -18,7 +18,14 @@ class TripGoApp extends ConsumerWidget {
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.fromMode(themeMode, brightness),
+      theme: AppTheme.fromMode(
+        switch (themeMode) {
+          AppThemeMode.light => ThemeMode.light,
+          AppThemeMode.dark => ThemeMode.dark,
+          AppThemeMode.system => ThemeMode.system,
+        },
+        brightness,
+      ),
       routerConfig: router,
     );
   }

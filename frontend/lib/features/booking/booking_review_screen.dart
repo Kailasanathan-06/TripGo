@@ -3,16 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
-import '../../shared/models/models.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/services/services.dart';
 import '../../shared/widgets/buttons.dart';
 import '../../shared/widgets/cards.dart';
 import '../../shared/widgets/feedback.dart';
+import '../../shared/widgets/fields.dart';
 import '../../shared/widgets/misc.dart';
 
 class BookingReviewScreen extends ConsumerStatefulWidget {
@@ -87,9 +86,9 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
     final discount = ref.watch(offerDiscountProvider);
 
     if (flow == null || passengers.isEmpty) {
-      return Scaffold(
-        appBar: const TripGoAppBar(title: 'Review booking'),
-        body: const TripGoEmptyState(icon: Icons.error_outline, title: 'No booking in progress', message: 'Start a new search to book your journey.'),
+      return const Scaffold(
+        appBar: TripGoAppBar(title: 'Review booking'),
+        body: TripGoEmptyState(icon: Icons.error_outline, title: 'No booking in progress', message: 'Start a new search to book your journey.'),
       );
     }
 
@@ -125,7 +124,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(flow.departure, style: AppTypography.titleStyle),
-                          Text(flow.route.split('→').first.trim(), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(flow.route.split('Ã¢â€ â€™').first.trim(), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
                         ],
                       ),
                     ),
@@ -135,7 +134,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(flow.arrival, style: AppTypography.titleStyle),
-                          Text(flow.route.split('→').last.trim(), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(flow.route.split('Ã¢â€ â€™').last.trim(), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
                         ],
                       ),
                     ),
@@ -174,7 +173,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
                         ),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
-                          child: Text('${passengers[i].fullName} · ${passengers[i].age} yrs', style: AppTypography.bodyStyle),
+                          child: Text('${passengers[i].fullName} Ã‚Â· ${passengers[i].age} yrs', style: AppTypography.bodyStyle),
                         ),
                         Text(passengers[i].gender, style: AppTypography.smallStyle),
                       ],
@@ -210,7 +209,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
                 if (discount > 0)
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.sm),
-                    child: Text('Coupon applied · discount ${formatMoney(discount)}', style: AppTypography.smallStyle.copyWith(color: AppColors.success)),
+                    child: Text('Coupon applied Ã‚Â· discount ${formatMoney(discount)}', style: AppTypography.smallStyle.copyWith(color: AppColors.success)),
                   ),
               ],
             ),
@@ -232,7 +231,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
             style: AppTypography.captionStyle,
           ),
           const SizedBox(height: AppSpacing.xl),
-          if (_creating) const TripGoLoading(message: 'Reserving your seats…'),
+          if (_creating) const TripGoLoading(message: 'Reserving your seatsÃ¢â‚¬Â¦'),
         ],
       ),
       bottomNavigationBar: SafeArea(

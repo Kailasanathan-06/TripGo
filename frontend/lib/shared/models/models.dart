@@ -217,7 +217,7 @@ class BusScheduleModel {
 
   factory BusScheduleModel.fromJson(Map<String, dynamic> json) => BusScheduleModel(
         id: _i(json['id']),
-        bus: BusModel.fromJson((json['bus'] as Map?) ?? const {}),
+        bus: BusModel.fromJson(((json['bus'] as Map?) ?? const {}).cast<String, dynamic>()),
         sourceCity: _s(json['source_city']),
         destinationCity: _s(json['destination_city']),
         sourceId: _i(json['source_id']),
@@ -345,7 +345,7 @@ class TrainScheduleModel {
 
   factory TrainScheduleModel.fromJson(Map<String, dynamic> json) => TrainScheduleModel(
         id: _i(json['id']),
-        train: TrainModel.fromJson((json['train'] as Map?) ?? const {}),
+        train: TrainModel.fromJson(((json['train'] as Map?) ?? const {}).cast<String, dynamic>()),
         sourceStationName: _s(json['source_station_name']),
         sourceStationCode: _s(json['source_station_code']),
         destinationStationName: _s(json['destination_station_name']),
@@ -595,7 +595,7 @@ class OfferModel {
   });
 
   String get badgeText {
-    if (discountPercent > 0) return '${discountPercent}% OFF';
+    if (discountPercent > 0) return '$discountPercent% OFF';
     return '₹${discountAmount.toStringAsFixed(0)} OFF';
   }
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import 'buttons.dart';
@@ -9,7 +8,7 @@ import 'buttons.dart';
 class TripGoLoading extends StatelessWidget {
   final String message;
 
-  const TripGoLoading({super.key, this.message = 'Loading…'});
+  const TripGoLoading({super.key, this.message = 'Loadingâ€¦'});
 
   @override
   Widget build(BuildContext context) {
@@ -71,9 +70,9 @@ class ShimmerList extends StatelessWidget {
   Widget _skeletonLines(int count) => Column(
         children: [
           for (var i = 0; i < count; i++)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: const Align(alignment: Alignment.centerLeft, child: _ShimmerBox(200, 12)),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Align(alignment: Alignment.centerLeft, child: _ShimmerBox(200, 12)),
             ),
         ],
       );
@@ -181,7 +180,7 @@ class TripGoEmptyState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: AppColors.lightBlue, shape: BoxShape.circle),
+              decoration: const BoxDecoration(color: AppColors.lightBlue, shape: BoxShape.circle),
               child: Icon(icon, size: 44, color: AppColors.royalBlue),
             ),
             const SizedBox(height: AppSpacing.lg),

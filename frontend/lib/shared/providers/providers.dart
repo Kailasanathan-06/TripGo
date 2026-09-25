@@ -86,7 +86,7 @@ class AuthController extends AsyncNotifier<AuthState> {
 
   Future<void> logout() async {
     await _auth.logout();
-    state = AsyncData(const AuthState(initialized: true));
+    state = const AsyncData(AuthState(initialized: true));
   }
 }
 
@@ -260,7 +260,7 @@ final unreadNotificationsProvider = Provider<int>((ref) {
 /// Fault injection for demo (used by mock payment screens).
 final demoFailChoiceProvider = StateProvider<String>((ref) => '');
 
-Future<void> invalidateUserData(Ref ref) async {
+Future<void> invalidateUserData(WidgetRef ref) async {
   ref.invalidate(myBookingsProvider);
   ref.invalidate(myTicketsProvider);
   ref.invalidate(notificationsProvider);

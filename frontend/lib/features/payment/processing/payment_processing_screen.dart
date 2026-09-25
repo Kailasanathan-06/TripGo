@@ -5,10 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../shared/models/models.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/services/services.dart';
-import '../../../shared/widgets/feedback.dart';
 
 class PaymentProcessingScreen extends ConsumerStatefulWidget {
   const PaymentProcessingScreen({super.key});
@@ -18,7 +16,7 @@ class PaymentProcessingScreen extends ConsumerStatefulWidget {
 }
 
 class _PaymentProcessingScreenState extends ConsumerState<PaymentProcessingScreen> {
-  var _message = 'Contacting your bank…';
+  var _message = 'Contacting your bankÃ¢â‚¬Â¦';
 
   @override
   void initState() {
@@ -42,7 +40,7 @@ class _PaymentProcessingScreenState extends ConsumerState<PaymentProcessingScree
       final started = await PaymentRepository().pay(bookingId: bookingId, method: method, action: 'start');
       ref.read(paymentReferenceProvider.notifier).state = started.reference;
 
-      setState(() => _message = fail ? 'Your payment is being declined…' : 'Authorizing payment…');
+      setState(() => _message = fail ? 'Your payment is being declinedÃ¢â‚¬Â¦' : 'Authorizing paymentÃ¢â‚¬Â¦');
       await Future<void>.delayed(const Duration(milliseconds: 1200));
 
       final result = await PaymentRepository().pay(bookingId: bookingId, method: method, action: fail ? 'failure' : 'success');

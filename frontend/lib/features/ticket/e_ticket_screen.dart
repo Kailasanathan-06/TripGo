@@ -8,12 +8,10 @@ import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../shared/models/models.dart';
-import '../../shared/providers/providers.dart';
 import '../../shared/services/services.dart';
 import '../../shared/widgets/buttons.dart';
 import '../../shared/widgets/cards.dart';
@@ -103,7 +101,7 @@ class _ETicketScreenState extends ConsumerState<ETicketScreen> {
               pw.Expanded(child: pw.SizedBox()),
               pw.Padding(
                 padding: const pw.EdgeInsets.symmetric(horizontal: 12),
-                child: pw.Text('→', style: pw.TextStyle(fontSize: 20, color: PdfColors.blue700, font: pwFont)),
+                child: pw.Text('Ã¢â€ â€™', style: pw.TextStyle(fontSize: 20, color: PdfColors.blue700, font: pwFont)),
               ),
               pw.Expanded(child: pw.SizedBox()),
               pw.Column(
@@ -116,13 +114,13 @@ class _ETicketScreenState extends ConsumerState<ETicketScreen> {
             ],
           ),
           pw.SizedBox(height: 12),
-          pw.Text('${payload['vehicle_name'] ?? ''} · ${payload['vehicle_number'] ?? ''}', style: pw.TextStyle(fontSize: 13, font: pwFont)),
+          pw.Text('${payload['vehicle_name'] ?? ''} Ã‚Â· ${payload['vehicle_number'] ?? ''}', style: pw.TextStyle(fontSize: 13, font: pwFont)),
           pw.Text('Date: ${payload['travel_date'] ?? ''}  |  Seats: $seats', style: pw.TextStyle(fontSize: 12, color: PdfColors.grey800, font: pwFont)),
           pw.SizedBox(height: 16),
           pw.Container(
-            decoration: pw.BoxDecoration(
+            decoration: const pw.BoxDecoration(
               color: PdfColors.grey100,
-              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+              borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
             ),
             padding: const pw.EdgeInsets.all(12),
             child: pw.Column(
@@ -134,7 +132,7 @@ class _ETicketScreenState extends ConsumerState<ETicketScreen> {
                   pw.Padding(
                     padding: const pw.EdgeInsets.symmetric(vertical: 2),
                     child: pw.Text(
-                      '${p['full_name']} · ${p['age']} yrs (${p['gender']})',
+                      '${p['full_name']} Ã‚Â· ${p['age']} yrs (${p['gender']})',
                       style: pw.TextStyle(fontSize: 12, font: pwFont),
                     ),
                   ),
@@ -170,7 +168,7 @@ class _ETicketScreenState extends ConsumerState<ETicketScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const TripGoLoading(message: 'Fetching your ticket…');
+            return const TripGoLoading(message: 'Fetching your ticketÃ¢â‚¬Â¦');
           }
           if (snapshot.hasError) {
             return TripGoErrorState(message: '${snapshot.error}', onRetry: () => setState(() => _future = TicketRepository().byPnr(widget.pnr)));
@@ -281,7 +279,7 @@ class _ETicketScreenState extends ConsumerState<ETicketScreen> {
                                 children: [
                                   const Icon(Icons.person_outline_rounded, size: 18, color: AppColors.royalBlue),
                                   const SizedBox(width: AppSpacing.sm),
-                                  Expanded(child: Text('${p['full_name']} · ${p['age']} yrs (${p['gender']})', style: AppTypography.bodyStyle)),
+                                  Expanded(child: Text('${p['full_name']} Ã‚Â· ${p['age']} yrs (${p['gender']})', style: AppTypography.bodyStyle)),
                                 ],
                               ),
                             ),

@@ -15,7 +15,7 @@ String? validatePassword(String? value) {
 String? validateName(String? value) {
   final v = (value ?? '').trim();
   if (v.isEmpty) return 'Full name is required';
-  if (v.split(' ').length < 1 || v.length < 3) return 'Enter a valid full name';
+  if (v.split(' ').isEmpty || v.length < 3) return 'Enter a valid full name';
   return null;
 }
 

@@ -66,8 +66,6 @@ class ApiClient {
     }
   }
 
-  Map<String, dynamic> _body(Response resp) => (resp.data as Map<String, dynamic>?)?['data'] ?? {};
-
   Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) async {
     try {
       final resp = await _dio.get<Map<String, dynamic>>(path, queryParameters: query);

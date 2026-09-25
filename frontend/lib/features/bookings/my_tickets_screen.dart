@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/models/models.dart';
@@ -11,7 +10,6 @@ import '../../shared/providers/providers.dart';
 import '../../shared/widgets/buttons.dart';
 import '../../shared/widgets/cards.dart';
 import '../../shared/widgets/feedback.dart';
-import '../../shared/widgets/misc.dart';
 
 class MyTicketsScreen extends ConsumerWidget {
   const MyTicketsScreen({super.key});
@@ -65,7 +63,7 @@ class MyTicketsScreen extends ConsumerWidget {
                   ),
                 );
               },
-              orElse: () => const SliverToBoxAdapter(child: TripGoLoading(message: 'Loading your tickets…')),
+              orElse: () => const SliverToBoxAdapter(child: TripGoLoading(message: 'Loading your ticketsÃ¢â‚¬Â¦')),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
           ],
@@ -97,7 +95,7 @@ class _PendingPayments extends ConsumerWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text('${b.source} → ${b.destination} · ${b.totalAmount.toStringAsFixed(0)}', style: AppTypography.bodyStyle),
+                      child: Text('${b.source} Ã¢â€ â€™ ${b.destination} Ã‚Â· ${b.totalAmount.toStringAsFixed(0)}', style: AppTypography.bodyStyle),
                     ),
                     TripGoOutlinedButton(
                       label: 'Pay now',

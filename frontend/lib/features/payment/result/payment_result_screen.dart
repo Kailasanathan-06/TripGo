@@ -3,15 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../shared/models/models.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
-import '../../../shared/widgets/misc.dart';
 
 class PaymentResultScreen extends ConsumerWidget {
   final String outcome;
@@ -72,7 +69,7 @@ class PaymentResultScreen extends ConsumerWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${booking.source} → ${booking.destination}', style: AppTypography.headingStyle),
+                              Text('${booking.source} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${booking.destination}', style: AppTypography.headingStyle),
                               const SizedBox(height: 4),
                               Text(success && booking.pnr != null ? 'PNR ${booking.pnr}' : 'Booking #${booking.id}', style: AppTypography.captionStyle),
                             ],
