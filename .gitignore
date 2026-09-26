@@ -25,6 +25,13 @@ frontend/.metadata
 frontend/.idea/
 frontend/*.iml
 
+# ── Android / Gradle ──
+frontend/android/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+.gradle/
+
 # ── IDE / OS ──
 .idea/
 .vscode/
