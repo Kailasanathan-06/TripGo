@@ -64,10 +64,16 @@ def prepare(port=PREFERRED_PORT, host=HOST):
             return _bound_port()
         _set_phase(WARMING, "Starting in-app server")
         _configure_environment()
-        _server = _create_server(host, port)
+        # Only the bind happens here. Importing Django and touching the database are
+        # the slow parts and they belong on the worker, so this returns in
+        # milliseconds and the port is known straight away.
+        application = _LazyApp()
+        _server = _create_server(host, port, application)
         bound = _bound_port()
         server = _server
-        _worker = threading.Thread(target=_run, args=(server,), name="tripgo-server", daemon=True)
+        _worker = threading.Thread(
+            target=_run, args=(server, application), name="tripgo-server", daemon=True
+        )
         worker = _worker
 
     worker.start()
@@ -92,11 +98,11 @@ def stop():
     if worker is not None and worker.is_alive() and worker is not threading.current_thread():
         if getattr(server, "tripgo_serving", False):
             server.shutdown()
-            worker.join(timeout=5)
+            worker.join(timeout=3)
         else:
             # Still warming up, so serve_forever() never ran. Join without asking it to
             # shut down; it checks the phase and bails out on its own.
-            worker.join(timeout=5)
+            worker.join(timeout=3)
     try:
         server.server_close()
     except Exception:  # noqa: BLE001 - best effort cleanup
@@ -175,8 +181,30 @@ class _ThreadingWSGIServer(socketserver.ThreadingMixIn, WSGIServer):
     request_queue_size = 32
 
 
-def _create_server(host, preferred_port):
-    application = _wsgi_app()
+class _LazyApp:
+    """Binds the socket now, imports Django on the worker thread.
+
+    ``prepare()`` has to return the port promptly because the Android host calls into
+    Python under a lock that ``status()`` also needs, so a multi-second import inside
+    it would stall every poll. Requests that arrive early wait on the event instead of
+    seeing a half-built application.
+    """
+
+    def __init__(self):
+        self._application = None
+        self._ready = threading.Event()
+
+    def build(self):
+        self._application = _wsgi_app()
+        self._ready.set()
+        return self._application
+
+    def __call__(self, environ, start_response):
+        self._ready.wait()
+        return self._application(environ, start_response)
+
+
+def _create_server(host, preferred_port, application):
     last_error = None
     for offset in range(PORT_SCAN_COUNT):
         port = preferred_port + offset
@@ -213,10 +241,11 @@ def _wsgi_app():
     return application
 
 
-def _run(server):
+def _run(server, application):
     global _server
 
     try:
+        application.build()
         _bootstrap_database()
         with _lock:
             if _state["phase"] != WARMING:

@@ -19,7 +19,11 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
-        TripGoServer.stop()
+        // Off the main thread on purpose: closing the socket waits for the worker
+        // thread, and doing that on the UI thread risks an ANR on every teardown.
+        thread(name = "tripgo-stop", isDaemon = true) {
+            TripGoServer.stop()
+        }
         super.onDestroy()
     }
 
