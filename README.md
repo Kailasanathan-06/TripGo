@@ -92,15 +92,32 @@ The APK is **self-contained**. The Django backend is bundled into it with
 [Chaquopy](https://chaquo.com/chaquopy), so there is nothing to install or start on
 the phone:
 
-- Opening the app starts CPython in the app's own process, applies migrations,
-  seeds the demo catalogue on a fresh install, and binds the API on
-  `http://127.0.0.1:8765/api/`.
+- Opening the app starts CPython in the app's own process, unpacks the demo
+  catalogue, and binds the API on `http://127.0.0.1:8765/api/`.
 - Closing the app ends the process, so the server stops with it. There is no
   separate process, service or notification to manage.
 - The socket is loopback-only, so the API is unreachable from other devices.
 
 The splash screen waits for `GET /api/health/` to answer before routing, and shows
 a retry button if the boot fails.
+
+### Why the first launch is quick
+
+The demo catalogue is ~23 000 rows, 21 896 of them train berths. Seeding that on
+the phone took tens of seconds, so it is done once at build time instead:
+
+- `tools/build_seed_db.py` migrates a throwaway database, seeds it, compacts it and
+  writes `tripgo_seed.sqlite3` (~2 MB) into the Chaquopy source root.
+- On a first launch the launcher copies that file into app storage — a file copy,
+  not 23 000 inserts — and only runs `migrate` afterwards, which is a no-op unless
+  the app was updated with new migrations.
+- `django.contrib.admin` is left out of `INSTALLED_APPS` in embedded mode, which
+  roughly halves `django.setup()`. `/admin/` is not routed there; the desktop
+  server is unaffected.
+
+An existing database is never overwritten, so bookings survive an app update. If
+the database was not bundled (no `backend/.venv` at build time) the launcher falls
+back to seeding on device, which is slower but still correct.
 
 How it fits together:
 
@@ -109,7 +126,8 @@ How it fits together:
 | `frontend/android/app/src/main/python/tripgo_server.py`            | Binds the socket, migrates, seeds, serves WSGI   |
 | `frontend/android/app/src/main/kotlin/…/TripGoServer.kt`           | Starts Python once per process, reports state   |
 | `frontend/android/app/requirements-android.txt`                    | The pure-Python subset bundled into the APK      |
-| `frontend/android/app/build.gradle.kts`                            | Syncs `backend/` into the Chaquopy source root   |
+| `frontend/android/app/build.gradle.kts`                            | Syncs `backend/` + the seed DB into Chaquopy     |
+| `tools/build_seed_db.py`                                           | Builds the pre-seeded database for the APK       |
 | `frontend/lib/core/network/api_bootstrap.dart`                     | Resolves the port, gates the app on readiness    |
 
 `backend/` is the single source of truth: Gradle copies it into the Chaquopy
@@ -131,6 +149,7 @@ To verify the launch sequence without a device:
 
 ```bash
 backend\.venv\Scripts\python tools\verify_embedded_server.py
+backend\.venv\Scripts\python tools\verify_seed_bundle.py
 ```
 
 ---

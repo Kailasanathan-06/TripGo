@@ -17,15 +17,21 @@ outside the device.
 """
 
 import os
+import shutil
 import socketserver
 import sys
 import threading
 import traceback
+from pathlib import Path
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, make_server
 
 HOST = "127.0.0.1"
 PREFERRED_PORT = 8765
 PORT_SCAN_COUNT = 24
+
+# Name of the pre-seeded database built by tools/build_seed_db.py and bundled as a
+# Python data file next to the backend sources.
+SEED_DB_NAME = "tripgo_seed.sqlite3"
 
 IDLE = "idle"
 WARMING = "warming"
@@ -35,6 +41,7 @@ ERROR = "error"
 
 _state = {"phase": IDLE, "detail": ""}
 _server = None
+_worker = None
 _lock = threading.Lock()
 
 
@@ -50,7 +57,7 @@ def prepare(port=PREFERRED_PORT, host=HOST):
     slow parts (asset extraction, imports, migrations, demo seed). Poll ``status()``
     until the phase turns into ``serving``.
     """
-    global _server
+    global _server, _worker
 
     with _lock:
         if _state["phase"] in (WARMING, SERVING):
@@ -60,22 +67,40 @@ def prepare(port=PREFERRED_PORT, host=HOST):
         _server = _create_server(host, port)
         bound = _bound_port()
         server = _server
+        _worker = threading.Thread(target=_run, args=(server,), name="tripgo-server", daemon=True)
+        worker = _worker
 
-    threading.Thread(target=_run, args=(server,), name="tripgo-server", daemon=True).start()
+    worker.start()
     return bound
 
 
 def stop():
     """Close the loopback socket. The worker thread exits with the process."""
-    global _server
+    global _server, _worker
 
     with _lock:
         server, _server = _server, None
+        worker, _worker = _worker, None
         if server is None:
             return False
         _set_phase(STOPPED, "")
 
-    threading.Thread(target=server.shutdown, name="tripgo-shutdown", daemon=True).start()
+    # Wait for the socket to actually close. Returning early would let a following
+    # prepare() rebind the port while this socket is still open, and on platforms
+    # where SO_REUSEADDR permits that (Windows) the pending connection can be handed
+    # to the closing socket and reset. This matters when the activity is recreated.
+    if worker is not None and worker.is_alive() and worker is not threading.current_thread():
+        if getattr(server, "tripgo_serving", False):
+            server.shutdown()
+            worker.join(timeout=5)
+        else:
+            # Still warming up, so serve_forever() never ran. Join without asking it to
+            # shut down; it checks the phase and bails out on its own.
+            worker.join(timeout=5)
+    try:
+        server.server_close()
+    except Exception:  # noqa: BLE001 - best effort cleanup
+        pass
     return True
 
 
@@ -98,6 +123,41 @@ def _configure_environment():
     os.environ["TRIPGO_DATA_DIR"] = data_dir
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     os.environ.setdefault("TZ", "Asia/Kolkata")
+
+
+def _install_bundled_database(data_dir):
+    """Seed the writable database from the copy bundled in the APK.
+
+    Returns True when the bundled catalogue was unpacked. This replaces seeding ~23k
+    rows on the device, which dominated the start-up time. An existing database is
+    never touched, so anything the user has done in the app survives an app update.
+    """
+    target = Path(data_dir) / "db.sqlite3"
+    if target.exists():
+        return False
+
+    source = _bundled_seed_db()
+    if source is None:
+        return False
+
+    temporary = target.with_suffix(".sqlite3.new")
+    shutil.copyfile(source, temporary)
+    os.replace(temporary, target)
+    return True
+
+
+def _bundled_seed_db():
+    """Locate the seed database inside the extracted APK assets, if it is there."""
+    try:
+        # Imported directly rather than through the settings machinery: config.settings
+        # only needs os/pathlib/dotenv, so this stays cheap and needs no django.setup().
+        # Its BASE_DIR is the Python source root, which is where Gradle put the file.
+        from config.settings import BASE_DIR
+    except ImportError:
+        return None
+
+    candidate = Path(BASE_DIR) / SEED_DB_NAME
+    return candidate if candidate.is_file() else None
 
 
 class _QuietRequestHandler(WSGIRequestHandler):
@@ -163,11 +223,17 @@ def _run(server):
                 return
             _set_phase(SERVING, "")
         print(f"[tripgo] API listening on http://{HOST}:{_bound_port()}/api/")
+        # Lets stop() tell whether shutdown() is safe to call: BaseServer.shutdown()
+        # waits on an event that serve_forever() only sets, so calling it before this
+        # point would block the caller forever.
+        server.tripgo_serving = True
         server.serve_forever(poll_interval=0.5)
     except BaseException:  # noqa: BLE001 - the state dict is the error channel
         detail = traceback.format_exc()
         with _lock:
-            _set_phase(ERROR, detail)
+            # A stop() that landed mid-warm-up is not a failure worth reporting.
+            if _state["phase"] != STOPPED:
+                _set_phase(ERROR, detail)
         print(f"[tripgo] server failed:\n{detail}")
     finally:
         with _lock:
@@ -183,11 +249,21 @@ def _bootstrap_database():
     """Create the schema and, on a fresh install, load the demo catalogue."""
     from django.core.management import call_command
 
+    data_dir = os.environ.get("TRIPGO_DATA_DIR", "")
+    if _install_bundled_database(data_dir):
+        # The catalogue came out of the APK, so the only work left is making sure the
+        # schema matches this build. That is a no-op unless the app was updated.
+        _report("Unpacking bundled catalogue")
+        call_command("migrate", interactive=False, verbosity=0)
+        _report("Starting API")
+        return
+
     _report("Applying database migrations")
     call_command("migrate", interactive=False, verbosity=0)
 
     # Demo data is only loaded while the catalogue is empty, so bookings a user has
-    # already made are never wiped on a later launch.
+    # already made are never wiped on a later launch. This is the slow path, used when
+    # the pre-seeded database was not bundled into the APK.
     _report("Loading demo data")
     call_command("seed_demo_data", if_empty=True, verbosity=0)
 

@@ -23,7 +23,6 @@ if EMBEDDED:
     ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.0.2.2", "[::1]"]
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -42,6 +41,12 @@ INSTALLED_APPS = [
     "apps.offers",
     "apps.notifications",
 ]
+
+if not EMBEDDED:
+    # django.contrib.admin drags in the whole ModelAdmin/form machinery and roughly
+    # doubles django.setup(). The in-app server never serves /admin/, so it is left
+    # out there; the desktop server keeps the full admin site.
+    INSTALLED_APPS.insert(0, "django.contrib.admin")
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
