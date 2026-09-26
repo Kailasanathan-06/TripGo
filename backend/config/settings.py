@@ -6,9 +6,21 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
+# When the backend is embedded in the TripGo Android app, the Python code is read
+# straight out of the APK and is therefore read-only. TRIPGO_DATA_DIR is pointed at
+# the app's private storage so the SQLite file and logs have a writable home.
+DATA_DIR = Path(os.getenv("TRIPGO_DATA_DIR") or BASE_DIR)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+# Set by the in-app launcher. The server only ever listens on the loopback
+# interface, so it is unreachable from the network.
+EMBEDDED = os.getenv("TRIPGO_EMBEDDED", "") == "1"
+
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-change-me")
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+DEBUG = False if EMBEDDED else os.getenv("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.2.2").split(",") if h.strip()]
+if EMBEDDED:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.0.2.2", "[::1]"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -64,7 +76,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": DATA_DIR / "db.sqlite3",
+        "OPTIONS": {
+            # The in-app server is threaded, so let SQLite wait for a lock instead
+            # of raising "database is locked", and use WAL for concurrent readers.
+            "timeout": 20,
+            "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
+        },
     }
 }
 

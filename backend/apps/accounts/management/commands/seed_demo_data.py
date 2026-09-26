@@ -94,7 +94,19 @@ CLASS_BERTHS = {
 class Command(BaseCommand):
     help = "Seed TripGo with realistic demo data (cities, stations, buses, trains, offers, users)."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--if-empty",
+            action="store_true",
+            help="Only seed when the database has no cities yet. Used by the in-app server so "
+            "it never wipes bookings a user has already made.",
+        )
+
     def handle(self, *args, **options):
+        if options.get("if_empty") and City.objects.exists():
+            self.stdout.write("Demo data already present - skipping seed.")
+            return
+
         self.clean_slate()
 
         city_map = {}

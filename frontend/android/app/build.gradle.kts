@@ -1,7 +1,45 @@
+import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Runs the Django backend inside the app process.
+    id("com.chaquo.python")
+}
+
+// ── TripGo in-app backend ────────────────────────────────────────────────
+// The Django project lives in backend/ and is the single source of truth for both
+// the desktop server and the APK. It is synced into the build directory and handed
+// to Chaquopy as an extra Python source root, so nothing has to be duplicated.
+val backendDir: Directory = rootProject.layout.projectDirectory.dir("../../backend")
+val syncedPythonDir: Provider<Directory> = layout.buildDirectory.dir("tripgo-python")
+
+// Chaquopy's Python 3.13 runtime is 64-bit only. Flutter widens ndk.abiFilters to
+// android-arm, android-arm64 and android-x64, so the list is re-asserted once the
+// Android DSL is finalised - otherwise the build fails on the unsupported 32-bit ABI
+// and the APK carries two ABIs nobody can use.
+val tripgoAbis = listOf("arm64-v8a", "x86_64")
+
+val syncTripgoBackend = tasks.register<Sync>("syncTripgoBackend") {
+    group = "tripgo"
+    description = "Copies the Django backend into the Chaquopy source set."
+    from(backendDir) {
+        include("manage.py")
+        include("config/**")
+        include("apps/**")
+        exclude("**/__pycache__/**", "**/*.pyc", "**/*.pyo")
+    }
+    into(syncedPythonDir)
+}
+
+// Chaquopy registers its pip/extraction tasks lazily, so make sure they - and the
+// asset merge that reads the Python source root - always see a fresh copy.
+tasks.configureEach {
+    if (name != "syncTripgoBackend") {
+        dependsOn(syncTripgoBackend)
+    }
 }
 
 android {
@@ -15,18 +53,17 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.tripgo"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Chaquopy requires API 24 or newer.
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        ndk {
+            abiFilters.clear()
+            abiFilters += tripgoAbis
+        }
     }
 
     buildTypes {
@@ -38,9 +75,37 @@ android {
     }
 }
 
+androidComponents {
+    // Runs after every plugin (including the Flutter one) has finished widening the
+    // ABI list, but before Chaquopy validates the variants.
+    finalizeDsl { extension: ApplicationExtension ->
+        extension.defaultConfig.ndk.abiFilters.apply {
+            clear()
+            addAll(tripgoAbis)
+        }
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        // Must match the major.minor of the Python used on the build machine.
+        version = "3.13"
+
+        pip {
+            install("-r", "requirements-android.txt")
+        }
+    }
+
+    sourceSets {
+        getByName("main") {
+            srcDir(syncedPythonDir)
+        }
+    }
+}
+
 kotlin {
     compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 

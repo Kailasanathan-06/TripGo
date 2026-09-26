@@ -49,13 +49,25 @@ class ApiClient {
 
   static final ApiClient instance = ApiClient._internal();
   late final Dio _dio;
+  String _baseUrl = AppConstants.apiBaseUrl;
+
+  /// Base URL currently in use. On Android this is the loopback port the embedded
+  /// Django server reported at startup, see `ApiBootstrap`.
+  String get baseUrl => _baseUrl;
+
+  void configureBaseUrl(String url) {
+    final normalized = url.endsWith('/') ? url : '$url/';
+    if (normalized == _baseUrl) return;
+    _baseUrl = normalized;
+    _dio.options.baseUrl = normalized;
+  }
 
   Future<bool> _tryRefresh() async {
     try {
       final refresh = await TokenStorage.readRefresh();
       if (refresh == null) return false;
       final resp = await Dio(
-        BaseOptions(baseUrl: AppConstants.apiBaseUrl),
+        BaseOptions(baseUrl: _baseUrl),
       ).post('/auth/refresh/', data: {'refresh': refresh});
       final access = resp.data['access'] as String;
       await TokenStorage.saveTokens(access: access, refresh: refresh);

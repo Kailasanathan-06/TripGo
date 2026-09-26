@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
+import '../../core/network/api_bootstrap.dart';
 import '../../core/storage/token_storage.dart';
 import '../models/models.dart';
 import '../services/services.dart';
@@ -42,6 +43,9 @@ class AuthController extends AsyncNotifier<AuthState> {
 
   @override
   Future<AuthState> build() async {
+    // The API base URL is only known once the embedded server has bound its
+    // socket, so never issue a request before the boot sequence has finished.
+    await ApiBootstrap.ready;
     if (!await TokenStorage.hasTokens()) {
       return const AuthState(initialized: true);
     }
