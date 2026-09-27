@@ -5,6 +5,8 @@ import android.util.Log
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Owns the Django backend that is embedded in this APK via Chaquopy.
@@ -20,13 +22,19 @@ import com.chaquo.python.android.AndroidPlatform
  * re-entrant across them, so interleaving calls is what produces "PyObject is
  * closed" style failures. [prepare] only binds a socket and returns immediately, so
  * holding the lock never means holding it for the length of a Django import.
+ *
+ * [status] is the exception: it runs on the Android platform thread and must never
+ * wait. Python.start() takes seconds on a cold start, and blocking the platform
+ * thread there stops the MethodChannel from answering at all, which is what made
+ * the splash give up with "Timed out while starting the TripGo server". It takes
+ * the lock opportunistically and otherwise reports the last known state.
  */
 object TripGoServer {
 
     private const val TAG = "TripGoServer"
     const val CHANNEL = "com.example.tripgo/server"
 
-    private val pythonLock = Any()
+    private val pythonLock = ReentrantLock()
 
     /**
      * The module handle is cached and deliberately never closed: Chaquopy
@@ -58,9 +66,9 @@ object TripGoServer {
 
         val app = context.applicationContext
         phase = "warming"
-        detail = "Starting in-app server"
+        detail = "Starting the TripGo server"
         try {
-            val bound = synchronized(pythonLock) {
+            val bound = pythonLock.withLock {
                 ensurePython(app)
                 phase = "warming"
                 detail = "Starting in-app server"
@@ -84,7 +92,7 @@ object TripGoServer {
      */
     fun stop() {
         try {
-            synchronized(pythonLock) {
+            pythonLock.withLock {
                 if (pythonStarted && Python.isStarted()) {
                     module()?.callAttr("stop")?.close()
                     Log.i(TAG, "TripGo API socket closed")
@@ -102,20 +110,24 @@ object TripGoServer {
     fun status(): Map<String, Any?> {
         val result = mutableMapOf<String, Any?>("phase" to phase, "port" to port, "detail" to detail)
         if (phase != "warming" && phase != "serving") return result
+        // The interpreter may still be starting, or another thread may hold the lock.
+        // Either way this is called from the platform thread, so answer immediately
+        // with the last known state rather than stalling the channel.
+        if (!pythonLock.tryLock()) return result
 
         return try {
-            synchronized(pythonLock) {
-                module()?.callAttr("status")?.use { state ->
-                    // PyObject is a Map<String, PyObject>, so the Python dict is read
-                    // with the plain subscript operator.
-                    state["phase"]?.use { value -> result["phase"] = value.toString() }
-                    state["detail"]?.use { value -> result["detail"] = value.toString() }
-                }
+            module()?.callAttr("status")?.use { state ->
+                // PyObject is a Map<String, PyObject>, so the Python dict is read with
+                // the plain subscript operator.
+                state["phase"]?.use { value -> result["phase"] = value.toString() }
+                state["detail"]?.use { value -> result["detail"] = value.toString() }
             }
             result
         } catch (t: Throwable) {
             Log.w(TAG, "Could not read the in-app server status", t)
             result
+        } finally {
+            pythonLock.unlock()
         }
     }
 

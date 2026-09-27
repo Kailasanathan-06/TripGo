@@ -4,6 +4,43 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
+class ApiIndexView(APIView):
+    """Pointer for anyone who opens the server root in a browser.
+
+    The API is mounted under ``/api/`` and has no page at ``/``, so hitting the root
+    used to produce a bare 404 that looked like a broken server. It is reachable
+    without a token on purpose: it is the quickest way to confirm the backend is up.
+    """
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        host = request.get_host()
+        return Response(
+            {
+                "success": True,
+                "error": None,
+                "data": {
+                    "service": "TripGo API",
+                    "status": "running",
+                    "health": f"http://{host}/api/health/",
+                    "endpoints": [
+                        "POST /api/auth/login/",
+                        "GET  /api/cities/",
+                        "GET  /api/buses/",
+                        "GET  /api/trains/",
+                        "GET  /api/offers/",
+                    ],
+                    "note": (
+                        "This is an API, not a web page. The TripGo app connects to it "
+                        "automatically, so there is nothing to open here."
+                    ),
+                },
+            }
+        )
+
+
 class HealthView(APIView):
     """Unauthenticated liveness probe.
 

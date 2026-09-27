@@ -2,9 +2,10 @@ from django.conf import settings
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from apps.common.views import HealthView
+from apps.common.views import ApiIndexView, HealthView
 
 _api_patterns = [
+    path("", ApiIndexView.as_view(), name="api_index"),
     path("api/health/", HealthView.as_view(), name="health"),
     path("api/auth/", include("apps.accounts.urls")),
     path("api/", include("apps.cities.urls")),
