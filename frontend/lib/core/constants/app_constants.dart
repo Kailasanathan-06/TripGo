@@ -32,4 +32,14 @@ class AppConstants {
   static const seatHoldMinutes = 15;
   static const demoEmail = 'demo@tripgo.app';
   static const demoPassword = 'demo12345';
+
+  /// Identifies the build running on the device, shown on the splash screen.
+  ///
+  /// Android happily keeps an old install after a newer APK is copied to the
+  /// machine, and a stale install reports symptoms that look exactly like a bug in
+  /// the new one. An error message from a previous build is therefore ambiguous, and
+  /// that ambiguity cost a round of debugging on a start-up bug that had already been
+  /// fixed. This is set from the build so the number on screen can be matched
+  /// against the file that was installed.
+  static const buildStamp = String.fromEnvironment('BUILD_STAMP', defaultValue: 'dev');
 }

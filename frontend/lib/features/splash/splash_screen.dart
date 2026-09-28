@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/network/api_bootstrap.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -27,6 +28,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   String? _error;
   bool _retrying = false;
 
+  /// Automatic retries after a failed boot, and the pause between them. Two is
+  /// enough to ride out a start that failed while the device was busy without
+  /// turning a genuine failure into a long wait.
+  static const _maxAutoAttempts = 2;
+  static const _retryDelay = Duration(seconds: 3);
+
   /// Ticks once a second for as long as the API is coming up, so a cold start that
   /// is genuinely slow can be told apart from one that has stopped. A bare spinner
   /// with a frozen line of text is indistinguishable from a hang, which is exactly
@@ -49,12 +56,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   ///
   /// The server lives inside this process, so it only has to be warmed up once per
   /// launch; there is nothing to connect to over a network.
-  Future<void> _bootstrap() async {
+  ///
+  /// A failed attempt is retried automatically before the error is shown. The
+  /// embedded server shares the app process, so a start that fails part way through
+  /// often leaves the interpreter in a state where the next attempt succeeds, and
+  /// making the user tap "Try again" for something that would have fixed itself is
+  /// both slower and less reliable than just trying again.
+  Future<void> _bootstrap({int attempt = 1}) async {
     _startElapsedTimer();
     try {
       await ApiBootstrap.ensureReady(onProgress: _setStatus);
     } on ApiBootstrapException catch (e) {
       if (!mounted) return;
+      if (attempt <= _maxAutoAttempts) {
+        _setStatus(
+          'Retrying the TripGo server (attempt ${attempt + 1} of ${_maxAutoAttempts + 1})',
+        );
+        await Future<void>.delayed(_retryDelay * attempt);
+        if (!mounted) return;
+        ApiBootstrap.reset();
+        return _bootstrap(attempt: attempt + 1);
+      }
       setState(() {
         _error = e.detail.isEmpty ? e.message : '${e.message}\n\n${e.detail.trim()}';
       });
@@ -240,6 +262,15 @@ class _BootStatus extends StatelessWidget {
           style: AppTypography.captionStyle.copyWith(
             color: AppColors.lightBlue.withValues(alpha: 0.6),
             fontSize: 11,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Build ${AppConstants.buildStamp}',
+          textAlign: TextAlign.center,
+          style: AppTypography.captionStyle.copyWith(
+            color: AppColors.lightBlue.withValues(alpha: 0.45),
+            fontSize: 10,
           ),
         ),
       ],
