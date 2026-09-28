@@ -43,10 +43,14 @@ object TripGoServer {
     const val CHANNEL = "com.example.tripgo/server"
 
     /**
-     * How long the Python side may stay in "warming" after the socket is bound before
-     * it is treated as stuck. Comfortably longer than migrating and seeding a
-     * database on a slow phone, and comfortably shorter than the 150 s the splash
-     * would otherwise spend spinning on a boot that is never going to finish.
+     * How long the Python side may report the same progress line before it is
+     * treated as stuck.
+     *
+     * This is deliberately a limit on *silence*, not on total boot time. A cold
+     * first launch has to extract ~28 MB of Python from the APK, which on a slow
+     * phone legitimately takes a minute, and an earlier version of this check
+     * compared total elapsed time instead. That reported a stall on a start that
+     * was still working and would have finished.
      */
     private const val STALL_AFTER_MS = 45_000L
 
@@ -67,6 +71,18 @@ object TripGoServer {
      */
     @Volatile
     private var socketBoundAt: Long = 0L
+
+    /**
+     * The last progress line seen from Python, and when it was seen. The stall check
+     * compares against this rather than against [socketBoundAt], so a start that keeps
+     * reporting forward progress is never reported as stuck no matter how long the
+     * device takes.
+     */
+    @Volatile
+    private var lastProgress = ""
+
+    @Volatile
+    private var lastProgressAt: Long = 0L
 
     @Volatile
     var phase: String = "idle"
@@ -149,10 +165,18 @@ object TripGoServer {
                 // PyObject is a Map<String, PyObject>, so the Python dict is read with
                 // the plain subscript operator.
                 state["phase"]?.use { value -> result["phase"] = value.toString() }
-                state["detail"]?.use { value -> result["detail"] = value.toString() }
+                state["detail"]?.use { value ->
+                    val reported = value.toString()
+                    result["detail"] = reported
+                    // Any new line means the boot is still making progress.
+                    if (reported != lastProgress) {
+                        lastProgress = reported
+                        lastProgressAt = SystemClock.elapsedRealtime()
+                    }
+                }
             }
             if (result["phase"] == "warming") {
-                reportStall(result, "the last state received was: ${result["detail"]}")
+                reportStall(result, "no progress reported by the in-app server")
             }
             result
         } catch (t: Throwable) {
@@ -169,18 +193,26 @@ object TripGoServer {
     }
 
     /**
-     * Turns a boot that is never going to finish into a visible error. Only applies
-     * once the socket is bound, because a long [Python.start] is a normal cold start
-     * rather than a stall.
+     * Turns a boot that has stopped reporting progress into a visible error.
+     *
+     * Only applies once the socket is bound, because a long `Python.start()` is a
+     * normal cold start rather than a stall, and the timer is reset by every new
+     * progress line so a slow device is given as long as it needs while it works.
      */
     private fun reportStall(result: MutableMap<String, Any?>, why: String) {
         if (socketBoundAt == 0L) return
-        val stuckFor = SystemClock.elapsedRealtime() - socketBoundAt
-        if (stuckFor < STALL_AFTER_MS) return
-        Log.e(TAG, "In-app server still warming after ${stuckFor}ms ($why)")
+        val now = SystemClock.elapsedRealtime()
+        if (lastProgressAt == 0L) {
+            lastProgressAt = socketBoundAt
+            return
+        }
+        val silentFor = now - lastProgressAt
+        if (silentFor < STALL_AFTER_MS) return
+        val total = now - socketBoundAt
+        Log.e(TAG, "In-app server silent for ${silentFor}ms of a ${total}ms boot ($why)")
         result["phase"] = "error"
-        result["detail"] = "The in-app server stalled after ${stuckFor / 1000}s " +
-            "without finishing its start-up. It got as far as: ${result["detail"]}. ($why)"
+        result["detail"] = "The in-app server stopped responding after " +
+            "${total / 1000}s. It last reported: ${result["detail"]}. ($why)"
     }
 
     private fun ensurePython(app: Context) {

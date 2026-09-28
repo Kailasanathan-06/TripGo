@@ -21,6 +21,7 @@ import shutil
 import socketserver
 import sys
 import threading
+import time
 import traceback
 from pathlib import Path
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, make_server
@@ -44,6 +45,10 @@ _server = None
 _worker = None
 _lock = threading.Lock()
 
+# Monotonic clock reading, used only to describe progress to the user.
+_CLOCK = time.monotonic
+_STARTED_AT = _CLOCK()
+
 
 def status():
     """Return the current server state. Consumed by the Dart boot sequence."""
@@ -57,12 +62,13 @@ def prepare(port=PREFERRED_PORT, host=HOST):
     slow parts (asset extraction, imports, migrations, demo seed). Poll ``status()``
     until the phase turns into ``serving``.
     """
-    global _server, _worker
+    global _server, _worker, _STARTED_AT
 
     with _lock:
         if _state["phase"] in (WARMING, SERVING):
             return _bound_port()
-        _set_phase(WARMING, "Starting in-app server")
+        _STARTED_AT = _CLOCK()
+        _set_phase(WARMING, "Starting the in-app server")
         _configure_environment()
         # Only the bind happens here. Importing Django and touching the database are
         # the slow parts and they belong on the worker, so this returns in
@@ -224,6 +230,7 @@ def _create_server(host, preferred_port, application):
 
 
 def _wsgi_app():
+    _report("Loading Django")
     try:
         import django
     except ImportError as exc:  # pragma: no cover - only on a broken packaging
@@ -231,6 +238,7 @@ def _wsgi_app():
 
     try:
         django.setup()
+        _report("Loading the TripGo backend")
         from config.wsgi import application
     except ImportError as exc:
         raise RuntimeError(
@@ -300,9 +308,18 @@ def _bootstrap_database():
 
 
 def _report(detail):
+    """Publish a progress line to the splash screen and to Logcat.
+
+    The elapsed time is included because the only useful question about a slow start
+    is which step is slow, and a step name on its own cannot answer that. It is also
+    what lets the Android host tell a start that is progressing from one that has
+    stopped: the line changes as work happens.
+    """
+    line = f"{detail} ({_CLOCK() - _STARTED_AT:.1f}s)"
     with _lock:
-        _state["detail"] = detail
-    print(f"[tripgo] {detail}")
+        _state["detail"] = line
+    print(f"[tripgo] {line}")
+    sys.stdout.flush()
 
 
 def log(message):

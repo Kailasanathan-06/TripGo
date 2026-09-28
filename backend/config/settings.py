@@ -22,6 +22,15 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.
 if EMBEDDED:
     ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.0.2.2", "[::1]"]
 
+# Apps the in-app server does not need. See the EMBEDDED branch below.
+EMBEDDED_EXCLUDED_APPS = (
+    "django.contrib.admin",
+    "django.contrib.staticfiles",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "corsheaders",
+)
+
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -42,10 +51,18 @@ INSTALLED_APPS = [
     "apps.notifications",
 ]
 
-if not EMBEDDED:
-    # django.contrib.admin drags in the whole ModelAdmin/form machinery and roughly
-    # doubles django.setup(). The in-app server never serves /admin/, so it is left
-    # out there; the desktop server keeps the full admin site.
+if EMBEDDED:
+    # The in-app server never serves /admin/, so admin is left out entirely: it drags
+    # in the whole ModelAdmin/form machinery and roughly doubles django.setup().
+    # staticfiles, sessions, messages and corsheaders go for the same reason and
+    # because nothing in the API uses them - there are no templates to render, no
+    # session or flash-message state to keep, and a native client sends no Origin
+    # header for CORS to apply to. Measured cold in separate processes on the
+    # development machine, a full boot goes from 2.5-3.1s to 2.0-2.3s, so roughly a
+    # fifth of it. Worth having, but note that this is not where a phone spends its
+    # time: the dominant cost there is unpacking the Python payload out of the APK.
+    INSTALLED_APPS = [a for a in INSTALLED_APPS if a not in EMBEDDED_EXCLUDED_APPS]
+else:
     INSTALLED_APPS.insert(0, "django.contrib.admin")
 
 MIDDLEWARE = [
@@ -58,6 +75,16 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+if EMBEDDED:
+    # Dropped to match INSTALLED_APPS above: the middleware for an app that is not
+    # installed cannot be imported.
+    MIDDLEWARE = [m for m in MIDDLEWARE if not any(name in m for name in EMBEDDED_EXCLUDED_APPS)]
+    # AuthenticationMiddleware refuses to run without SessionMiddleware. The API uses
+    # JWT and never reads a session, but the dependency is unconditional, so
+    # AuthenticationMiddleware is dropped too - DRF resolves the user from the
+    # Authorization header itself.
+    MIDDLEWARE = [m for m in MIDDLEWARE if "auth.middleware" not in m]
 
 ROOT_URLCONF = "config.urls"
 
