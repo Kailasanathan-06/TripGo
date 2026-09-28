@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../constants/app_constants.dart';
 import 'api_client.dart';
 import 'embedded_server.dart';
+import 'server_override.dart';
 
 class ApiBootstrapException implements Exception {
   const ApiBootstrapException(this.message, {this.detail = ''});
@@ -26,6 +27,11 @@ class ApiBootstrap {
   const ApiBootstrap._();
 
   static final Completer<void> _gate = Completer<void>();
+
+  /// How long to wait for a server on another machine before reporting failure.
+  /// Such a server either answers immediately or is not there, so waiting as long
+  /// as the embedded boot does only delays the error.
+  static const _remoteHealthTimeout = Duration(seconds: 8);
 
   static bool _attempted = false;
   static bool _configured = false;
@@ -55,8 +61,25 @@ class ApiBootstrap {
     final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
     if (!isAndroid) {
       // Web and desktop builds talk to a Django server started separately.
-      _applyBaseUrl(AppConstants.apiBaseUrl);
+      _setBaseUrl(AppConstants.apiBaseUrl);
       _status = const EmbeddedServerStatus.unavailable();
+      _markReady();
+      return;
+    }
+
+    // An override is checked first so that a phone pointed at a development
+    // machine never pays for the embedded interpreter at all.
+    final remote = ServerOverride.baseUrl;
+    if (remote != null) {
+      onProgress?.call('Connecting to $remote');
+      _status = const EmbeddedServerStatus.unavailable();
+      _setBaseUrl(remote);
+      // Short timeout: a wrong address should say so quickly rather than sitting on
+      // the splash for the same 45s the embedded boot gets.
+      await _awaitHealthy(
+        healthTimeout < _remoteHealthTimeout ? healthTimeout : _remoteHealthTimeout,
+        onProgress,
+      );
       return;
     }
 
@@ -75,7 +98,7 @@ class ApiBootstrap {
       );
     }
 
-    _applyBaseUrl(_status.baseUrl);
+    _setBaseUrl(_status.baseUrl);
     await _awaitHealthy(healthTimeout, onProgress);
   }
 
@@ -88,9 +111,19 @@ class ApiBootstrap {
 
   static bool get hasAttempted => _attempted;
 
-  static void _applyBaseUrl(String url) {
+  /// Points [ApiClient] at [url] for the health probe, without declaring the app
+  /// ready.
+  ///
+  /// Readiness is only recorded once the probe has actually answered. Marking it
+  /// here instead would make a failed probe unrecoverable, because [reset] refuses
+  /// to touch a configured bootstrap and the next attempt would return
+  /// immediately as if the API were reachable.
+  static void _setBaseUrl(String url) {
     _baseUrl = url;
     ApiClient.instance.configureBaseUrl(url);
+  }
+
+  static void _markReady() {
     _configured = true;
     if (!_gate.isCompleted) _gate.complete();
   }
@@ -112,7 +145,10 @@ class ApiBootstrap {
       onProgress?.call('Checking the TripGo server');
       try {
         final response = await probe.get<Map<String, dynamic>>('/health/');
-        if (response.statusCode == 200) return;
+        if (response.statusCode == 200) {
+          _markReady();
+          return;
+        }
         lastError = 'HTTP ${response.statusCode}';
       } on DioException catch (e) {
         lastError = e.message ?? e.type.name;
@@ -120,6 +156,13 @@ class ApiBootstrap {
       await Future<void>.delayed(const Duration(milliseconds: 400));
     }
 
-    throw ApiBootstrapException('The TripGo server did not become ready.', detail: '$lastError');
+    // The bootstrap stays unconfigured so the splash can retry: the app must not
+    // record a server it has not managed to reach.
+    // The bound URL is included because "Connection refused" on its own cannot
+    // distinguish a server that never bound from one that bound the wrong port.
+    throw ApiBootstrapException(
+      'The TripGo server did not become ready.',
+      detail: 'Gave up after ${timeout.inSeconds}s probing $_baseUrl\nLast failure: $lastError',
+    );
   }
 }

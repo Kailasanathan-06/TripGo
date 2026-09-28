@@ -1,6 +1,7 @@
 package com.example.tripgo
 
 import android.content.Context
+import android.os.SystemClock
 import android.util.Log
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
@@ -28,11 +29,26 @@ import kotlin.concurrent.withLock
  * thread there stops the MethodChannel from answering at all, which is what made
  * the splash give up with "Timed out while starting the TripGo server". It takes
  * the lock opportunistically and otherwise reports the last known state.
+ *
+ * Answering "warming" on every path is what turned a crash into a silent 150 second
+ * loop: a failed read used to fall through and report the cached "warming" phase, so
+ * a dead interpreter was indistinguishable from a slow boot. A read that throws is
+ * now reported as an error with its real cause, and a boot that stays stuck in
+ * "warming" past [STALL_AFTER_MS] is reported as a stall, both of which the splash
+ * can show instead of spinning.
  */
 object TripGoServer {
 
     private const val TAG = "TripGoServer"
     const val CHANNEL = "com.example.tripgo/server"
+
+    /**
+     * How long the Python side may stay in "warming" after the socket is bound before
+     * it is treated as stuck. Comfortably longer than migrating and seeding a
+     * database on a slow phone, and comfortably shorter than the 150 s the splash
+     * would otherwise spend spinning on a boot that is never going to finish.
+     */
+    private const val STALL_AFTER_MS = 45_000L
 
     private val pythonLock = ReentrantLock()
 
@@ -43,6 +59,14 @@ object TripGoServer {
      */
     private var module: PyObject? = null
     private var pythonStarted = false
+
+    /**
+     * Set once [prepare] has returned, which proves the interpreter is usable and
+     * the socket is bound. Before that, a slow boot is expected; after it, staying
+     * in "warming" means the warm-up itself is stuck.
+     */
+    @Volatile
+    private var socketBoundAt: Long = 0L
 
     @Volatile
     var phase: String = "idle"
@@ -75,6 +99,7 @@ object TripGoServer {
                 module()!!.callAttr("prepare").use { it.toInt() }
             }
             port = bound
+            socketBoundAt = SystemClock.elapsedRealtime()
             Log.i(TAG, "TripGo API socket bound on 127.0.0.1:$bound")
         } catch (t: Throwable) {
             phase = "error"
@@ -110,10 +135,14 @@ object TripGoServer {
     fun status(): Map<String, Any?> {
         val result = mutableMapOf<String, Any?>("phase" to phase, "port" to port, "detail" to detail)
         if (phase != "warming" && phase != "serving") return result
+
         // The interpreter may still be starting, or another thread may hold the lock.
         // Either way this is called from the platform thread, so answer immediately
         // with the last known state rather than stalling the channel.
-        if (!pythonLock.tryLock()) return result
+        if (!pythonLock.tryLock()) {
+            reportStall(result, "the Python runtime is busy and never finished starting")
+            return result
+        }
 
         return try {
             module()?.callAttr("status")?.use { state ->
@@ -122,13 +151,36 @@ object TripGoServer {
                 state["phase"]?.use { value -> result["phase"] = value.toString() }
                 state["detail"]?.use { value -> result["detail"] = value.toString() }
             }
+            if (result["phase"] == "warming") {
+                reportStall(result, "the last state received was: ${result["detail"]}")
+            }
             result
         } catch (t: Throwable) {
-            Log.w(TAG, "Could not read the in-app server status", t)
+            // Reporting the cached "warming" phase here is what turned a dead
+            // interpreter into a silent 150 second loop on the splash, so the real
+            // cause is surfaced instead of being swallowed.
+            Log.e(TAG, "Could not read the in-app server status", t)
+            result["phase"] = "error"
+            result["detail"] = "The in-app server could not be reached: ${t.stackTraceToString()}"
             result
         } finally {
             pythonLock.unlock()
         }
+    }
+
+    /**
+     * Turns a boot that is never going to finish into a visible error. Only applies
+     * once the socket is bound, because a long [Python.start] is a normal cold start
+     * rather than a stall.
+     */
+    private fun reportStall(result: MutableMap<String, Any?>, why: String) {
+        if (socketBoundAt == 0L) return
+        val stuckFor = SystemClock.elapsedRealtime() - socketBoundAt
+        if (stuckFor < STALL_AFTER_MS) return
+        Log.e(TAG, "In-app server still warming after ${stuckFor}ms ($why)")
+        result["phase"] = "error"
+        result["detail"] = "The in-app server stalled after ${stuckFor / 1000}s " +
+            "without finishing its start-up. It got as far as: ${result["detail"]}. ($why)"
     }
 
     private fun ensurePython(app: Context) {
