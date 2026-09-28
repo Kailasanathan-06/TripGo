@@ -227,15 +227,12 @@ object TripGoServer {
 
     private fun ensurePython(app: Context) {
         if (pythonStarted) return
-        // Claim the one-shot slot before doing anything: getInstance() quietly starts
-        // Python with a GenericPlatform if start() has not run yet, and start() itself
-        // may only ever be called once. Losing that race means the wrong platform and
-        // a dead interpreter.
-        pythonStarted = true
         if (!Python.isStarted()) {
             Log.i(TAG, "Starting embedded Python interpreter")
             Python.start(AndroidPlatform(app))
         }
+        check(Python.isStarted()) { "Chaquopy returned without starting Python" }
+        pythonStarted = true
     }
 
     private fun module(): PyObject? {

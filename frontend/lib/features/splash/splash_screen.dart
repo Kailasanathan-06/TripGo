@@ -18,7 +18,8 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fade;
   late final Animation<double> _scale;
@@ -28,11 +29,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   String? _error;
   bool _retrying = false;
 
-  /// Automatic retries after a failed boot, and the pause between them. Two is
-  /// enough to ride out a start that failed while the device was busy without
-  /// turning a genuine failure into a long wait.
-  static const _maxAutoAttempts = 2;
-  static const _retryDelay = Duration(seconds: 3);
+  /// Retry transient runtime and database startup failures without requiring a tap.
+  static const _maxAutoAttempts = 5;
+  static const _retryDelay = Duration(seconds: 2);
 
   /// Ticks once a second for as long as the API is coming up, so a cold start that
   /// is genuinely slow can be told apart from one that has stopped. A bare spinner
@@ -44,10 +43,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
-    _fade = CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut));
-    _scale = Tween<double>(begin: 0.6, end: 1).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _slide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1600));
+    _fade = CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.2, 0.7, curve: Curves.easeOut));
+    _scale = Tween<double>(begin: 0.6, end: 1).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _slide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _controller.forward();
     _bootstrap();
   }
@@ -78,7 +82,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
         return _bootstrap(attempt: attempt + 1);
       }
       setState(() {
-        _error = e.detail.isEmpty ? e.message : '${e.message}\n\n${e.detail.trim()}';
+        _error =
+            e.detail.isEmpty ? e.message : '${e.message}\n\n${e.detail.trim()}';
       });
       return;
     } finally {
@@ -156,23 +161,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [AppColors.royalBlue, AppColors.cyan]),
+                        gradient: const LinearGradient(
+                            colors: [AppColors.royalBlue, AppColors.cyan]),
                         borderRadius: BorderRadius.circular(32),
                         boxShadow: [
-                          BoxShadow(color: AppColors.royalBlue.withValues(alpha: 0.5), blurRadius: 40, offset: const Offset(0, 12)),
+                          BoxShadow(
+                              color: AppColors.royalBlue.withValues(alpha: 0.5),
+                              blurRadius: 40,
+                              offset: const Offset(0, 12)),
                         ],
                       ),
-                      child: const Icon(Icons.route_rounded, size: 64, color: AppColors.white),
+                      child: const Icon(Icons.route_rounded,
+                          size: 64, color: AppColors.white),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     Text(
                       'TRIPGO',
-                      style: AppTypography.displayStyle.copyWith(color: AppColors.white, letterSpacing: 4),
+                      style: AppTypography.displayStyle
+                          .copyWith(color: AppColors.white, letterSpacing: 4),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Your Journey. One Smart Ticket.',
-                      style: AppTypography.captionStyle.copyWith(color: AppColors.lightBlue),
+                      style: AppTypography.captionStyle
+                          .copyWith(color: AppColors.lightBlue),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     _BootStatus(
@@ -213,14 +225,25 @@ class _BootStatus extends StatelessWidget {
     if (error != null) {
       return Column(
         children: [
-          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 28),
+          const Icon(Icons.error_outline_rounded,
+              color: AppColors.error, size: 28),
           const SizedBox(height: AppSpacing.sm),
           Text(
             error!,
             textAlign: TextAlign.center,
             maxLines: 8,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.captionStyle.copyWith(color: AppColors.lightBlue),
+            style:
+                AppTypography.captionStyle.copyWith(color: AppColors.lightBlue),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Build ${AppConstants.buildStamp}',
+            textAlign: TextAlign.center,
+            style: AppTypography.captionStyle.copyWith(
+              color: AppColors.lightBlue.withValues(alpha: 0.45),
+              fontSize: 10,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           FilledButton.icon(
@@ -241,7 +264,8 @@ class _BootStatus extends StatelessWidget {
             const SizedBox(
               width: 14,
               height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.lightBlue),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppColors.lightBlue),
             ),
             const SizedBox(width: AppSpacing.sm),
             Flexible(
@@ -250,7 +274,8 @@ class _BootStatus extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.captionStyle.copyWith(color: AppColors.lightBlue),
+                style: AppTypography.captionStyle
+                    .copyWith(color: AppColors.lightBlue),
               ),
             ),
           ],
