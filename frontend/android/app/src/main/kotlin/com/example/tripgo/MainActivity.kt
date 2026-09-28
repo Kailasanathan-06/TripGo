@@ -33,6 +33,12 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "status" -> result.success(TripGoServer.status())
+                    "start" -> {
+                        thread(name = "tripgo-retry", isDaemon = true) {
+                            TripGoServer.start(applicationContext)
+                        }
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }

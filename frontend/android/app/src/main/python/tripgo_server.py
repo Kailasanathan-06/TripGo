@@ -18,6 +18,7 @@ outside the device.
 
 import os
 import shutil
+import sqlite3
 import socketserver
 import sys
 import threading
@@ -48,6 +49,8 @@ _lock = threading.Lock()
 # Monotonic clock reading, used only to describe progress to the user.
 _CLOCK = time.monotonic
 _STARTED_AT = _CLOCK()
+_PROGRESS_LABEL = ""
+_PROGRESS_AT = _STARTED_AT
 
 
 def status():
@@ -142,10 +145,10 @@ def _install_bundled_database(data_dir):
 
     Returns True when the bundled catalogue was unpacked. This replaces seeding ~23k
     rows on the device, which dominated the start-up time. An existing database is
-    never touched, so anything the user has done in the app survives an app update.
+    only replaced when it contains no application data, so user data survives updates.
     """
     target = Path(data_dir) / "db.sqlite3"
-    if target.exists():
+    if target.exists() and _database_has_application_data(target):
         return False
 
     source = _bundled_seed_db()
@@ -156,6 +159,38 @@ def _install_bundled_database(data_dir):
     shutil.copyfile(source, temporary)
     os.replace(temporary, target)
     return True
+
+
+def _database_has_application_data(database):
+    framework_tables = {
+        "auth_group",
+        "auth_group_permissions",
+        "auth_permission",
+        "django_admin_log",
+        "django_content_type",
+        "django_migrations",
+        "django_session",
+    }
+    connection = None
+    try:
+        connection = sqlite3.connect(str(database))
+        tables = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        ).fetchall()
+        for (table,) in tables:
+            if table in framework_tables or table.startswith("sqlite_"):
+                continue
+            quoted_table = table.replace('"', '""')
+            if connection.execute(
+                f'SELECT 1 FROM "{quoted_table}" LIMIT 1'
+            ).fetchone():
+                return True
+    except sqlite3.DatabaseError:
+        return True
+    finally:
+        if connection is not None:
+            connection.close()
+    return False
 
 
 def _bundled_seed_db():
@@ -252,9 +287,16 @@ def _wsgi_app():
 def _run(server, application):
     global _server
 
+    heartbeat_stop = threading.Event()
+    heartbeat = threading.Thread(
+        target=_report_slow_step, args=(heartbeat_stop,), name="tripgo-progress", daemon=True
+    )
+    heartbeat.start()
     try:
         application.build()
         _bootstrap_database()
+        heartbeat_stop.set()
+        heartbeat.join(timeout=1)
         with _lock:
             if _state["phase"] != WARMING:
                 return
@@ -273,6 +315,7 @@ def _run(server, application):
                 _set_phase(ERROR, detail)
         print(f"[tripgo] server failed:\n{detail}")
     finally:
+        heartbeat_stop.set()
         with _lock:
             if _server is server:
                 _server = None
@@ -315,11 +358,25 @@ def _report(detail):
     what lets the Android host tell a start that is progressing from one that has
     stopped: the line changes as work happens.
     """
-    line = f"{detail} ({_CLOCK() - _STARTED_AT:.1f}s)"
+    global _PROGRESS_LABEL, _PROGRESS_AT
+
+    now = _CLOCK()
+    line = f"{detail} ({now - _STARTED_AT:.1f}s)"
     with _lock:
+        _PROGRESS_LABEL = detail
+        _PROGRESS_AT = now
         _state["detail"] = line
     print(f"[tripgo] {line}")
     sys.stdout.flush()
+
+
+def _report_slow_step(stop_event):
+    while not stop_event.wait(10):
+        with _lock:
+            if _state["phase"] != WARMING:
+                return
+            elapsed = _CLOCK() - _PROGRESS_AT
+            _state["detail"] = f"{_PROGRESS_LABEL} (still working, {elapsed:.0f}s)"
 
 
 def log(message):

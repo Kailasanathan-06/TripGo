@@ -53,6 +53,7 @@ object TripGoServer {
      * was still working and would have finished.
      */
     private const val STALL_AFTER_MS = 45_000L
+    private const val MAX_BOOT_TIME_MS = 180_000L
 
     private val pythonLock = ReentrantLock()
 
@@ -105,6 +106,9 @@ object TripGoServer {
         if (phase == "warming" || phase == "serving") return
 
         val app = context.applicationContext
+        socketBoundAt = 0L
+        lastProgress = ""
+        lastProgressAt = 0L
         phase = "warming"
         detail = "Starting the TripGo server"
         try {
@@ -175,6 +179,8 @@ object TripGoServer {
                     }
                 }
             }
+            phase = result["phase"] as? String ?: phase
+            detail = result["detail"] as? String ?: detail
             if (result["phase"] == "warming") {
                 reportStall(result, "no progress reported by the in-app server")
             }
@@ -207,12 +213,16 @@ object TripGoServer {
             return
         }
         val silentFor = now - lastProgressAt
-        if (silentFor < STALL_AFTER_MS) return
         val total = now - socketBoundAt
-        Log.e(TAG, "In-app server silent for ${silentFor}ms of a ${total}ms boot ($why)")
+        val timedOut = total >= MAX_BOOT_TIME_MS
+        if (!timedOut && silentFor < STALL_AFTER_MS) return
+        val reason = if (timedOut) "startup exceeded ${MAX_BOOT_TIME_MS / 1000}s" else why
+        Log.e(TAG, "In-app server silent for ${silentFor}ms of a ${total}ms boot ($reason)")
         result["phase"] = "error"
         result["detail"] = "The in-app server stopped responding after " +
-            "${total / 1000}s. It last reported: ${result["detail"]}. ($why)"
+            "${total / 1000}s. It last reported: ${result["detail"]}. ($reason)"
+        phase = "error"
+        detail = result["detail"] as String
     }
 
     private fun ensurePython(app: Context) {

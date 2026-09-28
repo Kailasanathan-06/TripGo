@@ -69,7 +69,8 @@ class EmbeddedServerStatus {
 class EmbeddedServer {
   const EmbeddedServer._();
 
-  static const MethodChannel _channel = MethodChannel('com.example.tripgo/server');
+  static const MethodChannel _channel =
+      MethodChannel('com.example.tripgo/server');
 
   /// Reads the current state of the embedded server.
   static Future<EmbeddedServerStatus> fetchStatus() async {
@@ -84,7 +85,8 @@ class EmbeddedServer {
     } on MissingPluginException {
       return const EmbeddedServerStatus.unavailable();
     } on PlatformException catch (e) {
-      return EmbeddedServerStatus(phase: EmbeddedServerPhase.error, detail: e.message ?? e.code);
+      return EmbeddedServerStatus(
+          phase: EmbeddedServerPhase.error, detail: e.message ?? e.code);
     }
   }
 
@@ -94,6 +96,13 @@ class EmbeddedServer {
     Duration interval = const Duration(milliseconds: 350),
     void Function(EmbeddedServerStatus status)? onProgress,
   }) async {
+    try {
+      await _channel.invokeMethod<void>('start');
+    } on PlatformException catch (e) {
+      return EmbeddedServerStatus(
+          phase: EmbeddedServerPhase.error, detail: e.message ?? e.code);
+    }
+
     final deadline = DateTime.now().add(timeout);
     var current = const EmbeddedServerStatus(phase: EmbeddedServerPhase.idle);
 
@@ -101,7 +110,8 @@ class EmbeddedServer {
       current = await fetchStatus();
       onProgress?.call(current);
 
-      if (current.phase != EmbeddedServerPhase.warming && current.phase != EmbeddedServerPhase.idle) {
+      if (current.phase != EmbeddedServerPhase.warming &&
+          current.phase != EmbeddedServerPhase.idle) {
         return current;
       }
       if (DateTime.now().isAfter(deadline)) {

@@ -17,6 +17,7 @@ Usage:
 
 import json
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -139,11 +140,15 @@ def make_tree(workdir, seed_db, label):
     return root
 
 
-def boot(root, workdir, label, verify=False):
+def boot(root, workdir, label, verify=False, existing_empty_database=False):
     home = Path(workdir) / f"home-{label}"
     if home.exists():
         shutil.rmtree(home)
     home.mkdir(parents=True)
+    if existing_empty_database:
+        database = home / "tripgo" / "db.sqlite3"
+        database.parent.mkdir(parents=True)
+        sqlite3.connect(database).close()
 
     result = subprocess.run(
         [str(VENV_PYTHON), "-c", BOOT_SCRIPT, str(root), str(home), "1" if verify else "0"],
@@ -220,6 +225,18 @@ def main():
         if again["boot_s"] > bundled["boot_s"] * 1.35:
             raise SystemExit(f"  relaunch was {again['boot_s']:.2f}s vs {bundled['boot_s']:.2f}s - it is reseeding")
         print(f"  relaunch               {again['boot_s']:.2f}s (no reseeding)")
+
+        print("\nrecovery after an interrupted first launch (empty database file)")
+        recovered, _ = boot(
+            bundled_root,
+            workdir,
+            "empty db recovery",
+            verify=True,
+            existing_empty_database=True,
+        )
+        check_catalogue(recovered)
+        if recovered["database_bytes"] == 0 or recovered["leftover_temp"]:
+            raise SystemExit("  empty database was not replaced cleanly with the bundled catalogue")
 
     print("\nall seed bundle checks passed")
     return 0
