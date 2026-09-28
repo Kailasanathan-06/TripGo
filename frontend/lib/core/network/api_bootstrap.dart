@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import '../constants/app_constants.dart';
 import 'api_client.dart';
 import 'embedded_server.dart';
-import 'server_override.dart';
 
 class ApiBootstrapException implements Exception {
   const ApiBootstrapException(this.message, {this.detail = ''});
@@ -27,11 +26,6 @@ class ApiBootstrap {
   const ApiBootstrap._();
 
   static final Completer<void> _gate = Completer<void>();
-
-  /// How long to wait for a server on another machine before reporting failure.
-  /// Such a server either answers immediately or is not there, so waiting as long
-  /// as the embedded boot does only delays the error.
-  static const _remoteHealthTimeout = Duration(seconds: 8);
 
   static bool _attempted = false;
   static bool _configured = false;
@@ -64,22 +58,6 @@ class ApiBootstrap {
       _setBaseUrl(AppConstants.apiBaseUrl);
       _status = const EmbeddedServerStatus.unavailable();
       _markReady();
-      return;
-    }
-
-    // An override is checked first so that a phone pointed at a development
-    // machine never pays for the embedded interpreter at all.
-    final remote = ServerOverride.baseUrl;
-    if (remote != null) {
-      onProgress?.call('Connecting to $remote');
-      _status = const EmbeddedServerStatus.unavailable();
-      _setBaseUrl(remote);
-      // Short timeout: a wrong address should say so quickly rather than sitting on
-      // the splash for the same 45s the embedded boot gets.
-      await _awaitHealthy(
-        healthTimeout < _remoteHealthTimeout ? healthTimeout : _remoteHealthTimeout,
-        onProgress,
-      );
       return;
     }
 

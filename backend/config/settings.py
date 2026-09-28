@@ -21,14 +21,6 @@ DEBUG = False if EMBEDDED else os.getenv("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.2.2").split(",") if h.strip()]
 if EMBEDDED:
     ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.0.2.2", "[::1]"]
-elif os.getenv("TRIPGO_ALLOW_LAN", "") == "1":
-    # The app can be pointed at this machine instead of running its own server, in
-    # which case requests arrive from the phone with this machine's LAN address as
-    # the Host header. Listing that address explicitly would mean editing this file
-    # every time the address changes, so development opt-in accepts any host. It is
-    # gated behind an environment variable because it also makes the dev server
-    # reachable by anything else on the network.
-    ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -152,14 +144,6 @@ CORS_ALLOWED_ORIGINS = [
     ).split(",")
     if o.strip()
 ]
-if os.getenv("TRIPGO_ALLOW_LAN", "") == "1" and not EMBEDDED:
-    # Only the Flutter web build is a browser that enforces CORS; the Android app
-    # is a native client and never sends an Origin header. This exists so the web
-    # build can be pointed at a LAN server too.
-    # CORS_ALLOW_ALL_ORIGINS is used rather than a "*" entry because django-cors-headers
-    # rejects a bare wildcard in CORS_ALLOWED_ORIGINS (check E013).
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOWED_ORIGINS = []
 CORS_ALLOW_CREDENTIALS = True
 
 # Seat hold duration in minutes before a HELD seat is released.
