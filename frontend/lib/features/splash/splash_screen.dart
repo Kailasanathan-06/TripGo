@@ -169,7 +169,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 }
 
-class _BootStatus extends StatelessWidget {
+class _BootStatus extends StatefulWidget {
   const _BootStatus({
     required this.error,
     required this.message,
@@ -183,34 +183,64 @@ class _BootStatus extends StatelessWidget {
   final Future<void> Function() onRetry;
 
   @override
+  State<_BootStatus> createState() => _BootStatusState();
+}
+
+class _BootStatusState extends State<_BootStatus> {
+  final TextEditingController _ipController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _ipController.text = ApiBootstrap.baseUrl;
+  }
+
+  @override
+  void dispose() {
+    _ipController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (error != null) {
+    if (widget.error != null) {
       return Column(
         children: [
           const Icon(Icons.wifi_off_rounded, color: AppColors.error, size: 32),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            error!,
+            widget.error!,
             textAlign: TextAlign.center,
             maxLines: 10,
             overflow: TextOverflow.ellipsis,
             style: AppTypography.captionStyle
                 .copyWith(color: AppColors.lightBlue),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Build ${AppConstants.buildStamp}',
-            textAlign: TextAlign.center,
-            style: AppTypography.captionStyle.copyWith(
-              color: AppColors.lightBlue.withValues(alpha: 0.45),
-              fontSize: 10,
+          const SizedBox(height: AppSpacing.md),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: TextField(
+              controller: _ipController,
+              style: const TextStyle(color: AppColors.white),
+              decoration: InputDecoration(
+                labelText: 'Server API URL',
+                labelStyle: TextStyle(color: AppColors.white.withOpacity(0.7)),
+                filled: true,
+                fillColor: AppColors.white.withOpacity(0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           FilledButton.icon(
-            onPressed: retrying ? null : onRetry,
+            onPressed: widget.retrying ? null : () {
+              ApiBootstrap.updateBaseUrl(_ipController.text);
+              widget.onRetry();
+            },
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Try again'),
+            label: const Text('Update IP & Retry'),
           ),
         ],
       );
@@ -231,7 +261,7 @@ class _BootStatus extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Flexible(
               child: Text(
-                message,
+                widget.message,
                 textAlign: TextAlign.center,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -240,15 +270,6 @@ class _BootStatus extends StatelessWidget {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Build ${AppConstants.buildStamp}',
-          textAlign: TextAlign.center,
-          style: AppTypography.captionStyle.copyWith(
-            color: AppColors.lightBlue.withValues(alpha: 0.45),
-            fontSize: 10,
-          ),
         ),
       ],
     );

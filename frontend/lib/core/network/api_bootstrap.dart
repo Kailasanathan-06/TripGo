@@ -69,6 +69,11 @@ class ApiBootstrap {
 
   static bool get hasAttempted => _attempted;
 
+  static void updateBaseUrl(String url) {
+    _setBaseUrl(url);
+    _attempted = false;
+  }
+
   static void _setBaseUrl(String url) {
     _baseUrl = url.endsWith('/') ? url : '$url/';
     ApiClient.instance.configureBaseUrl(_baseUrl);
