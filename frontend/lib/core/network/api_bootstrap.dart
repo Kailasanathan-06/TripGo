@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 
 import '../constants/app_constants.dart';
 import 'api_client.dart';
-import 'embedded_server.dart';
 
 class ApiBootstrapException implements Exception {
   const ApiBootstrapException(this.message, {this.detail = ''});
@@ -19,9 +18,16 @@ class ApiBootstrapException implements Exception {
 
 /// Brings the API endpoint online before the rest of the app talks to it.
 ///
-/// On Android the backend is embedded in the APK, so the base URL is only known
-/// once the native host has bound its loopback socket. Every repository is
-/// expected to await [ready] first - see `AuthController.build`.
+/// The app now talks to an **external** Django API server rather than an
+/// in-process Python interpreter. On first launch the splash screen will
+/// verify the server is reachable via a /health/ probe and then proceed.
+/// There is no 45-second startup window, no Python extraction, and no
+/// Chaquopy dependency.
+///
+/// To point the app at your server, build with:
+///   flutter build apk --dart-define=API_BASE_URL=http://192.168.x.x:8000/api/
+/// During development the Android emulator's default host alias works:
+///   --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/
 class ApiBootstrap {
   const ApiBootstrap._();
 
@@ -30,53 +36,28 @@ class ApiBootstrap {
   static bool _attempted = false;
   static bool _configured = false;
   static String _baseUrl = AppConstants.apiBaseUrl;
-  static EmbeddedServerStatus _status = const EmbeddedServerStatus(phase: EmbeddedServerPhase.idle);
 
-  /// Completes once [configure] has pointed [ApiClient] at a reachable API.
-  /// Never completes with an error: a failed boot is surfaced on the splash screen
-  /// and can be retried, so blocking forever is the safe behaviour here.
+  /// Completes once [ensureReady] has pointed [ApiClient] at a reachable API.
   static Future<void> get ready => _gate.future;
 
   static String get baseUrl => _baseUrl;
 
-  static EmbeddedServerStatus get status => _status;
-
-  /// Resolves the API base URL and waits until the server answers a health probe.
+  /// Checks that the Django API server is reachable.
   ///
-  /// [onProgress] receives a short human readable line for the splash screen.
-  /// Throws [ApiBootstrapException] when the API cannot be reached.
+  /// On success the gate is opened so every repository can start making
+  /// requests. On failure an [ApiBootstrapException] is thrown so the splash
+  /// screen can show a retry button.
   static Future<void> ensureReady({
-    Duration healthTimeout = const Duration(seconds: 45),
+    Duration healthTimeout = const Duration(seconds: 30),
     void Function(String message)? onProgress,
   }) async {
     if (_configured) return;
     _attempted = true;
 
-    final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-    if (!isAndroid) {
-      // Web and desktop builds talk to a Django server started separately.
-      _setBaseUrl(AppConstants.apiBaseUrl);
-      _status = const EmbeddedServerStatus.unavailable();
-      _markReady();
-      return;
-    }
+    // Configure the base URL immediately – it is static on all platforms.
+    _setBaseUrl(AppConstants.apiBaseUrl);
+    onProgress?.call('Connecting to TripGo server…');
 
-    onProgress?.call('Starting the TripGo server');
-    _status = await EmbeddedServer.waitUntilServing(
-      onProgress: (status) {
-        _status = status;
-        onProgress?.call(status.label);
-      },
-    );
-
-    if (!_status.isServing) {
-      throw ApiBootstrapException(
-        'The TripGo server could not start.',
-        detail: _status.detail,
-      );
-    }
-
-    _setBaseUrl(_status.baseUrl);
     await _awaitHealthy(healthTimeout, onProgress);
   }
 
@@ -84,21 +65,13 @@ class ApiBootstrap {
   static void reset() {
     if (_configured) return;
     _attempted = false;
-    _status = const EmbeddedServerStatus(phase: EmbeddedServerPhase.idle);
   }
 
   static bool get hasAttempted => _attempted;
 
-  /// Points [ApiClient] at [url] for the health probe, without declaring the app
-  /// ready.
-  ///
-  /// Readiness is only recorded once the probe has actually answered. Marking it
-  /// here instead would make a failed probe unrecoverable, because [reset] refuses
-  /// to touch a configured bootstrap and the next attempt would return
-  /// immediately as if the API were reachable.
   static void _setBaseUrl(String url) {
-    _baseUrl = url;
-    ApiClient.instance.configureBaseUrl(url);
+    _baseUrl = url.endsWith('/') ? url : '$url/';
+    ApiClient.instance.configureBaseUrl(_baseUrl);
   }
 
   static void _markReady() {
@@ -106,23 +79,29 @@ class ApiBootstrap {
     if (!_gate.isCompleted) _gate.complete();
   }
 
-  /// The socket is bound before the schema exists, so poll the health endpoint to
-  /// be sure the first real request from the app will not race the boot.
-  static Future<void> _awaitHealthy(Duration timeout, void Function(String message)? onProgress) async {
+  /// Polls the /health/ endpoint until it answers 200 or [timeout] elapses.
+  static Future<void> _awaitHealthy(
+    Duration timeout,
+    void Function(String message)? onProgress,
+  ) async {
     final probe = Dio(
       BaseOptions(
         baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 3),
-        receiveTimeout: const Duration(seconds: 5),
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 8),
       ),
     );
     final deadline = DateTime.now().add(timeout);
     Object? lastError;
+    int attempt = 0;
 
     while (DateTime.now().isBefore(deadline)) {
-      onProgress?.call('Checking the TripGo server');
+      attempt++;
+      onProgress?.call(
+          'Connecting to TripGo server${attempt > 1 ? ' (attempt $attempt)' : ''}…');
       try {
-        final response = await probe.get<Map<String, dynamic>>('/health/');
+        final response =
+            await probe.get<Map<String, dynamic>>('/health/');
         if (response.statusCode == 200) {
           _markReady();
           return;
@@ -131,16 +110,17 @@ class ApiBootstrap {
       } on DioException catch (e) {
         lastError = e.message ?? e.type.name;
       }
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await Future<void>.delayed(const Duration(milliseconds: 800));
     }
 
-    // The bootstrap stays unconfigured so the splash can retry: the app must not
-    // record a server it has not managed to reach.
-    // The bound URL is included because "Connection refused" on its own cannot
-    // distinguish a server that never bound from one that bound the wrong port.
     throw ApiBootstrapException(
-      'The TripGo server did not become ready.',
-      detail: 'Gave up after ${timeout.inSeconds}s probing $_baseUrl\nLast failure: $lastError',
+      'Could not reach the TripGo server.',
+      detail:
+          'Gave up after ${timeout.inSeconds}s probing $_baseUrl\n'
+          'Last error: $lastError\n\n'
+          'Make sure the Django server is running and set the API URL:\n'
+          '  flutter build apk \\\n'
+          '    --dart-define=API_BASE_URL=http://<your-ip>:8000/api/',
     );
   }
 }

@@ -50,10 +50,40 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                      fit: BoxFit.cover,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.background.withOpacity(0.8),
+                            AppColors.background,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               actions: [
-                IconButton(
-                  onPressed: () => context.go('/inbox'),
-                  icon: const Icon(Icons.notifications_none_rounded),
+                Container(
+                  margin: const EdgeInsets.only(right: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withOpacity(0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () => context.go('/inbox'),
+                    icon: const Icon(Icons.notifications_none_rounded, color: AppColors.royalBlue),
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
               ],
@@ -92,13 +122,13 @@ class HomeScreen extends ConsumerWidget {
             const SliverToBoxAdapter(child: _SectionHeader(title: 'Popular routes')),
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 120,
+                height: 140,
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   scrollDirection: Axis.horizontal,
                   itemCount: _popularRoutes.length,
                   separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
-                  itemBuilder: (_, i) => _PopularRouteCard(route: _popularRoutes[i]),
+                  itemBuilder: (_, i) => _PopularRouteCard(route: _popularRoutes[i], index: i),
                 ),
               ),
             ),
@@ -276,28 +306,73 @@ final _popularRoutes = [
 
 class _PopularRouteCard extends StatelessWidget {
   final (String, String) route;
+  final int index;
 
-  const _PopularRouteCard({required this.route});
+  const _PopularRouteCard({required this.route, required this.index});
 
   @override
   Widget build(BuildContext context) {
-    return TripGoCard(
+    // A curated list of beautiful Indian destination photos for the demo routes
+    final images = [
+      'https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+    ];
+
+    return GestureDetector(
       onTap: () => context.push('/search/results/bus'),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        children: [
-          const Icon(Icons.route_rounded, color: AppColors.royalBlue, size: 26),
-          const SizedBox(width: AppSpacing.md),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      child: Container(
+        width: 220,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          image: DecorationImage(
+            image: NetworkImage(images[index % images.length]),
+            fit: BoxFit.cover,
+          ),
+          boxShadow: const [AppShadows.card],
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black.withOpacity(0.8),
+              ],
+            ),
+          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(route.$1, style: AppTypography.bodyMedium),
-              const Icon(Icons.arrow_downward_rounded, size: 14, color: AppColors.cyan),
-              Text(route.$2, style: AppTypography.bodyMedium),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_rounded, color: Colors.white, size: 16),
+                  const SizedBox(width: 4),
+                  Text(route.$1, style: AppTypography.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 6, top: 2, bottom: 2),
+                child: Icon(Icons.more_vert_rounded, color: AppColors.cyan, size: 14),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.trip_origin_rounded, color: Colors.white, size: 16),
+                  const SizedBox(width: 4),
+                  Text(route.$2, style: AppTypography.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                ],
+              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -314,24 +389,48 @@ class _OfferPromoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 250,
-      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [AppColors.deepBlue, AppColors.royalBlue]),
         borderRadius: BorderRadius.circular(AppRadius.xl),
         boxShadow: const [AppShadows.card],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: AppColors.cyan, borderRadius: BorderRadius.circular(AppRadius.pill)),
-            child: Text(badge, style: AppTypography.smallStyle.copyWith(color: AppColors.darkNavy, fontWeight: FontWeight.w700)),
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Icon(Icons.percent_rounded, size: 100, color: AppColors.white.withOpacity(0.1)),
           ),
-          const Spacer(),
-          Text(offerTitle, style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
-          const SizedBox(height: 4),
-          Text('Use code $code', style: AppTypography.captionStyle.copyWith(color: AppColors.lightBlue)),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: AppColors.cyan, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                      child: Text(badge, style: AppTypography.smallStyle.copyWith(color: AppColors.darkNavy, fontWeight: FontWeight.w700)),
+                    ),
+                    const Icon(Icons.local_offer_rounded, color: AppColors.cyan, size: 20),
+                  ],
+                ),
+                const Spacer(),
+                Text(offerTitle, style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.lightBlue.withOpacity(0.5), width: 1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text('Code: $code', style: AppTypography.captionStyle.copyWith(color: AppColors.lightBlue, fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

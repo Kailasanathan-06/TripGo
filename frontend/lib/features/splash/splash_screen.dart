@@ -25,20 +25,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final Animation<double> _scale;
   late final Animation<Offset> _slide;
 
-  String _status = 'Starting the TripGo server';
+  String _status = 'Connecting to TripGo server\u2026';
   String? _error;
   bool _retrying = false;
 
-  /// Retry transient runtime and database startup failures without requiring a tap.
-  static const _maxAutoAttempts = 5;
+  static const _maxAutoAttempts = 3;
   static const _retryDelay = Duration(seconds: 2);
-
-  /// Ticks once a second for as long as the API is coming up, so a cold start that
-  /// is genuinely slow can be told apart from one that has stopped. A bare spinner
-  /// with a frozen line of text is indistinguishable from a hang, which is exactly
-  /// the ambiguity that made this hard to diagnose.
-  Timer? _elapsedTimer;
-  int _elapsedSeconds = 0;
 
   @override
   void initState() {
@@ -56,26 +48,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _bootstrap();
   }
 
-  /// Brings the embedded API online, then routes to the right place.
-  ///
-  /// The server lives inside this process, so it only has to be warmed up once per
-  /// launch; there is nothing to connect to over a network.
-  ///
-  /// A failed attempt is retried automatically before the error is shown. The
-  /// embedded server shares the app process, so a start that fails part way through
-  /// often leaves the interpreter in a state where the next attempt succeeds, and
-  /// making the user tap "Try again" for something that would have fixed itself is
-  /// both slower and less reliable than just trying again.
   Future<void> _bootstrap({int attempt = 1}) async {
-    _startElapsedTimer();
     try {
       await ApiBootstrap.ensureReady(onProgress: _setStatus);
     } on ApiBootstrapException catch (e) {
       if (!mounted) return;
       if (attempt <= _maxAutoAttempts) {
         _setStatus(
-          'Retrying the TripGo server (attempt ${attempt + 1} of ${_maxAutoAttempts + 1})',
-        );
+            'Retrying\u2026 (attempt ${attempt + 1} of ${_maxAutoAttempts + 1})');
         await Future<void>.delayed(_retryDelay * attempt);
         if (!mounted) return;
         ApiBootstrap.reset();
@@ -86,16 +66,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             e.detail.isEmpty ? e.message : '${e.message}\n\n${e.detail.trim()}';
       });
       return;
-    } finally {
-      _elapsedTimer?.cancel();
     }
 
-    // Let the logo animation finish before leaving the splash screen.
+    // Let the animation finish, then decide where to route.
     try {
       await _controller.forward().orCancel;
-    } catch (_) {
-      // The controller was disposed because the screen went away first.
-    }
+    } catch (_) {}
     await ref.read(authProvider.future);
     if (!mounted) return;
     final state = ref.read(authProvider).valueOrNull;
@@ -111,23 +87,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     setState(() => _status = message);
   }
 
-  void _startElapsedTimer() {
-    _elapsedTimer?.cancel();
-    _elapsedSeconds = 0;
-    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _elapsedSeconds++);
-    });
-  }
-
   Future<void> _retry() async {
     setState(() {
       _retrying = true;
       _error = null;
-      _status = 'Starting the TripGo server';
+      _status = 'Connecting to TripGo server\u2026';
     });
     ApiBootstrap.reset();
     await _bootstrap();
@@ -136,7 +100,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
-    _elapsedTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -153,10 +116,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: SlideTransition(
               position: _slide,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // ── App logo ──
                     Container(
                       width: 120,
                       height: 120,
@@ -182,7 +147,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Your Journey. One Smart Ticket.',
+                      AppConstants.tagline,
                       style: AppTypography.captionStyle
                           .copyWith(color: AppColors.lightBlue),
                     ),
@@ -190,7 +155,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     _BootStatus(
                       error: _error,
                       message: _status,
-                      elapsedSeconds: _elapsedSeconds,
                       retrying: _retrying,
                       onRetry: _retry,
                     ),
@@ -209,14 +173,12 @@ class _BootStatus extends StatelessWidget {
   const _BootStatus({
     required this.error,
     required this.message,
-    required this.elapsedSeconds,
     required this.retrying,
     required this.onRetry,
   });
 
   final String? error;
   final String message;
-  final int elapsedSeconds;
   final bool retrying;
   final Future<void> Function() onRetry;
 
@@ -225,16 +187,15 @@ class _BootStatus extends StatelessWidget {
     if (error != null) {
       return Column(
         children: [
-          const Icon(Icons.error_outline_rounded,
-              color: AppColors.error, size: 28),
+          const Icon(Icons.wifi_off_rounded, color: AppColors.error, size: 32),
           const SizedBox(height: AppSpacing.sm),
           Text(
             error!,
             textAlign: TextAlign.center,
-            maxLines: 8,
+            maxLines: 10,
             overflow: TextOverflow.ellipsis,
-            style:
-                AppTypography.captionStyle.copyWith(color: AppColors.lightBlue),
+            style: AppTypography.captionStyle
+                .copyWith(color: AppColors.lightBlue),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -279,15 +240,6 @@ class _BootStatus extends StatelessWidget {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Starting up · ${elapsedSeconds}s',
-          textAlign: TextAlign.center,
-          style: AppTypography.captionStyle.copyWith(
-            color: AppColors.lightBlue.withValues(alpha: 0.6),
-            fontSize: 11,
-          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(

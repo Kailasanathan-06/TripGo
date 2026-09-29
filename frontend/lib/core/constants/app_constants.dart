@@ -8,25 +8,23 @@ class AppConstants {
 
   static const currency = '₹';
 
-  /// Loopback port the embedded Django server binds by default. Must match
-  /// `PREFERRED_PORT` in `android/app/src/main/python/tripgo_server.py`.
-  static const embeddedServerPort = 8765;
-
   /// Base URL of the TripGo API.
   ///
-  /// On Android the Django backend is bundled into the APK and listens on the
-  /// loopback interface, so the app talks to `127.0.0.1` and never to a machine on
-  /// the network. The port is resolved at startup by `ApiBootstrap`; this value is
-  /// only the fallback and is also what the web build uses, pointed at a Django
-  /// server started with `manage.py runserver 127.0.0.1:8000`.
-  ///
   /// Override at build time with
-  /// `--dart-define=API_BASE_URL=http://<host>:8000/api/`.
+  ///   --dart-define=API_BASE_URL=http://<host>:<port>/api/
+  ///
+  /// Defaults:
+  ///   • Android emulator → 10.0.2.2 maps to the host machine's loopback,
+  ///     so `manage.py runserver 0.0.0.0:8000` on the host is reachable.
+  ///   • Web / desktop → 127.0.0.1:8000 (Django dev server on the same machine).
+  ///
+  /// For a **physical device** replace the default with your machine's LAN IP:
+  ///   --dart-define=API_BASE_URL=http://192.168.x.x:8000/api/
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: kIsWeb
         ? 'http://127.0.0.1:8000/api/'
-        : 'http://127.0.0.1:$embeddedServerPort/api/',
+        : 'http://10.0.2.2:8000/api/',
   );
 
   static const seatHoldMinutes = 15;
@@ -34,12 +32,6 @@ class AppConstants {
   static const demoPassword = 'demo12345';
 
   /// Identifies the build running on the device, shown on the splash screen.
-  ///
-  /// Android happily keeps an old install after a newer APK is copied to the
-  /// machine, and a stale install reports symptoms that look exactly like a bug in
-  /// the new one. An error message from a previous build is therefore ambiguous, and
-  /// that ambiguity cost a round of debugging on a start-up bug that had already been
-  /// fixed. This is set from the build so the number on screen can be matched
-  /// against the file that was installed.
-  static const buildStamp = String.fromEnvironment('BUILD_STAMP', defaultValue: 'dev');
+  static const buildStamp =
+      String.fromEnvironment('BUILD_STAMP', defaultValue: 'dev');
 }

@@ -121,64 +121,94 @@ class TripGoBusCard extends StatelessWidget {
     final bus = schedule.bus;
     return TripGoCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(color: AppColors.lightBlue, shape: BoxShape.circle),
-                child: Icon(bus.isSleeper ? Icons.hotel_rounded : Icons.event_seat_rounded, size: 20, color: AppColors.royalBlue),
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.card)),
+              image: const DecorationImage(
+                image: NetworkImage('https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'),
+                fit: BoxFit.cover,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(bus.operator, style: AppTypography.headingStyle),
-                    Row(
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.card)),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.7)],
+                ),
+              ),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(bus.busType.replaceAll('_', ' '), style: AppTypography.smallStyle),
-                        const SizedBox(width: AppSpacing.sm),
-                        const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
-                        Text('${bus.rating.toStringAsFixed(1)} (${schedule.reviewsCount})', style: AppTypography.captionStyle),
+                        Text(bus.operator, style: AppTypography.headingStyle.copyWith(color: Colors.white)),
+                        Row(
+                          children: [
+                            Text(bus.busType.replaceAll('_', ' '), style: AppTypography.smallStyle.copyWith(color: Colors.white70)),
+                            const SizedBox(width: AppSpacing.sm),
+                            const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
+                            Text('${bus.rating.toStringAsFixed(1)} (${schedule.reviewsCount})', style: AppTypography.captionStyle.copyWith(color: Colors.white70)),
+                          ],
+                        ),
                       ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(formatMoney(schedule.baseFare), style: AppTypography.headingStyle.copyWith(color: AppColors.royalBlue)),
+                        if (schedule.discountAmount > 0)
+                          Text('${schedule.discountAmount.toStringAsFixed(0)} off', style: AppTypography.captionStyle.copyWith(color: AppColors.success)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              children: [
+                _RoutePill(
+                  departure: formatTime(schedule.boardingTime),
+                  arrival: formatTime(schedule.droppingTime),
+                  duration: schedule.durationText,
+                  route: '${schedule.sourceCity} â†’ ${schedule.destinationCity}',
+                  icon: const Icon(Icons.directions_bus_filled, size: 22, color: AppColors.royalBlue),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    const Icon(Icons.verified_user_outlined, size: 14, color: AppColors.success),
+                    const SizedBox(width: 4),
+                    Flexible(child: Text(bus.amenities.take(3).join(' Â· '), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    const Spacer(),
+                    Flexible(
+                      child: Text('${schedule.availableSeats} seats left',
+                          style: AppTypography.smallStyle.copyWith(color: schedule.availableSeats < 10 ? AppColors.error : AppColors.success)),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(formatMoney(schedule.baseFare), style: AppTypography.headingStyle),
-                  if (schedule.discountAmount > 0)
-                    Text('${schedule.discountAmount.toStringAsFixed(0)} off', style: AppTypography.captionStyle.copyWith(color: AppColors.success)),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RoutePill(
-            departure: formatTime(schedule.boardingTime),
-            arrival: formatTime(schedule.droppingTime),
-            duration: schedule.durationText,
-            route: '${schedule.sourceCity} â†’ ${schedule.destinationCity}',
-            icon: const Icon(Icons.directions_bus_filled, size: 22, color: AppColors.royalBlue),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              const Icon(Icons.verified_user_outlined, size: 14, color: AppColors.success),
-              const SizedBox(width: 4),
-              Flexible(child: Text(bus.amenities.take(3).join(' Â· '), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
-              const Spacer(),
-              Flexible(
-                child: Text('${schedule.availableSeats} seats left',
-                    style: AppTypography.smallStyle.copyWith(color: schedule.availableSeats < 10 ? AppColors.error : AppColors.success)),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -197,63 +227,86 @@ class TripGoTrainCard extends StatelessWidget {
     final train = schedule.train;
     return TripGoCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(color: AppColors.lightBlue, shape: BoxShape.circle),
-                child: const Icon(Icons.train_rounded, size: 20, color: AppColors.royalBlue),
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.card)),
+              image: const DecorationImage(
+                image: NetworkImage('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'),
+                fit: BoxFit.cover,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(train.name, style: AppTypography.headingStyle),
-                    Row(
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.card)),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.7)],
+                ),
+              ),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(train.number, style: AppTypography.smallStyle),
-                        Text(' Â· ${train.trainType}', style: AppTypography.smallStyle),
-                        const SizedBox(width: AppSpacing.sm),
-                        const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
-                        Text(train.rating.toStringAsFixed(1), style: AppTypography.captionStyle),
+                        Text(train.name, style: AppTypography.headingStyle.copyWith(color: Colors.white)),
+                        Row(
+                          children: [
+                            Text(train.number, style: AppTypography.smallStyle.copyWith(color: Colors.white70)),
+                            Text(' Â· ${train.trainType}', style: AppTypography.smallStyle.copyWith(color: Colors.white70)),
+                            const SizedBox(width: AppSpacing.sm),
+                            const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
+                            Text(train.rating.toStringAsFixed(1), style: AppTypography.captionStyle.copyWith(color: Colors.white70)),
+                          ],
+                        ),
                       ],
                     ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              children: [
+                _RoutePill(
+                  departure: schedule.sourceStationName.split(' ').first,
+                  arrival: schedule.destinationStationName.split(' ').first,
+                  duration: schedule.durationText,
+                  route: '${schedule.sourceStationName} â†’ ${schedule.destinationStationName}',
+                  icon: const Icon(Icons.departure_board_rounded, size: 22, color: AppColors.royalBlue),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    for (final c in schedule.coaches.take(4))
+                      Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.sm),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.lightBlue,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                          child: Text(c.coachClass, style: AppTypography.smallStyle.copyWith(color: AppColors.royalBlue)),
+                        ),
+                      ),
+                    const Spacer(),
+                    Text('${schedule.totalAvailable} berths avail', style: AppTypography.smallStyle.copyWith(color: AppColors.success)),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RoutePill(
-            departure: schedule.sourceStationName.split(' ').first,
-            arrival: schedule.destinationStationName.split(' ').first,
-            duration: schedule.durationText,
-            route: '${schedule.sourceStationName} â†’ ${schedule.destinationStationName}',
-            icon: const Icon(Icons.departure_board_rounded, size: 22, color: AppColors.royalBlue),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              for (final c in schedule.coaches.take(4))
-                Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.sm),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.lightBlue,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Text(c.coachClass, style: AppTypography.smallStyle.copyWith(color: AppColors.royalBlue)),
-                  ),
-                ),
-              const Spacer(),
-              Text('${schedule.totalAvailable} berths avail', style: AppTypography.smallStyle.copyWith(color: AppColors.success)),
-            ],
+              ],
+            ),
           ),
         ],
       ),

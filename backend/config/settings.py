@@ -18,7 +18,12 @@ EMBEDDED = os.getenv("TRIPGO_EMBEDDED", "") == "1"
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-change-me")
 DEBUG = False if EMBEDDED else os.getenv("DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.2.2").split(",") if h.strip()]
+_default_hosts = "localhost,127.0.0.1,10.0.2.2,0.0.0.0"
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", _default_hosts).split(",") if h.strip()]
+if DEBUG and "*" not in ALLOWED_HOSTS:
+    # Accept any host in development so physical devices on the LAN can reach
+    # the server without having to set ALLOWED_HOSTS manually.
+    ALLOWED_HOSTS.append("*")
 if EMBEDDED:
     ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.0.2.2", "[::1]"]
 
@@ -171,6 +176,7 @@ CORS_ALLOWED_ORIGINS = [
     ).split(",")
     if o.strip()
 ]
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # allow any origin in dev (emulator + physical device)
 CORS_ALLOW_CREDENTIALS = True
 
 # Seat hold duration in minutes before a HELD seat is released.
