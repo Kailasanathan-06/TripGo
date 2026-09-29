@@ -23,98 +23,144 @@ class PaymentResultScreen extends ConsumerWidget {
     final amount = ref.watch(paymentAmountProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            const Spacer(),
-            Padding(
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 40,
+              bottom: 40,
+              left: AppSpacing.lg,
+              right: AppSpacing.lg,
+            ),
+            decoration: BoxDecoration(
+              gradient: success ? AppColors.cyanGradient : const LinearGradient(colors: [AppColors.error, Color(0xFFC0392B)]),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (success ? AppColors.success : AppColors.error).withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    success ? Icons.check_circle_outline_rounded : Icons.cancel_outlined,
+                    size: 80,
+                    color: AppColors.white,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  success ? 'Payment Successful!' : 'Payment Failed',
+                  style: AppTypography.displayStyle.copyWith(color: AppColors.white, fontSize: 28),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  success
+                      ? 'Your seats are confirmed. An e-ticket has been generated.'
+                      : 'We could not complete your payment. You can retry from the payment screen.',
+                  style: AppTypography.bodyStyle.copyWith(color: AppColors.white.withOpacity(0.9)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                children: [
+              children: [
+                if (booking != null)
                   Container(
-                    padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
-                      color: success ? AppColors.success.withValues(alpha: 0.12) : AppColors.error.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.border.withOpacity(0.5),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    child: Icon(
-                      success ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                      size: 72,
-                      color: success ? AppColors.success : AppColors.error,
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Travel details', style: AppTypography.captionStyle),
+                            if (reference.isNotEmpty) Text('Ref: $reference', style: AppTypography.captionStyle),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('${booking.source} Ã¢â€ â€™ ${booking.destination}', style: AppTypography.headingStyle),
+                                  const SizedBox(height: 4),
+                                  Text(success && booking.pnr != null ? 'PNR: ${booking.pnr}' : 'Booking ID: #${booking.id}', style: AppTypography.bodyStyle.copyWith(color: AppColors.royalBlue)),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('Total Paid', style: AppTypography.captionStyle),
+                                const SizedBox(height: 2),
+                                Text(formatMoney(amount > 0 ? amount : booking.totalAmount), style: AppTypography.titleStyle.copyWith(color: AppColors.royalBlue)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(success ? 'Payment successful' : 'Payment failed', style: AppTypography.displayStyle),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    success
-                        ? 'Your seats are confirmed. An e-ticket has been generated.'
-                        : 'We could not complete your payment. You can retry from the payment screen.',
-                    style: AppTypography.captionStyle,
-                    textAlign: TextAlign.center,
+                const SizedBox(height: 40),
+                if (success && booking?.pnr != null)
+                  TripGoButton(
+                    label: 'View e-ticket',
+                    icon: Icons.confirmation_number_rounded,
+                    onPressed: () => context.push('/ticket/${booking!.pnr}'),
+                  )
+                else if (!success)
+                  TripGoButton(
+                    label: 'Retry payment',
+                    icon: Icons.refresh_rounded,
+                    onPressed: () => context.go('/payment/method'),
                   ),
-                ],
-              ),
+                const SizedBox(height: AppSpacing.md),
+                TripGoOutlinedButton(
+                  label: 'Back to home',
+                  icon: Icons.home_rounded,
+                  onPressed: () {
+                    ref.read(bookingFlowProvider.notifier).clear();
+                    ref.read(passengersProvider.notifier).state = const [];
+                    ref.read(offerCodeProvider.notifier).state = '';
+                    ref.read(offerDiscountProvider.notifier).state = 0;
+                    context.go('/home');
+                  },
+                ),
+              ],
             ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                children: [
-                  if (booking != null)
-                    TripGoCard(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${booking.source} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${booking.destination}', style: AppTypography.headingStyle),
-                              const SizedBox(height: 4),
-                              Text(success && booking.pnr != null ? 'PNR ${booking.pnr}' : 'Booking #${booking.id}', style: AppTypography.captionStyle),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(formatMoney(amount > 0 ? amount : booking.totalAmount), style: AppTypography.titleStyle),
-                              const SizedBox(height: 4),
-                              Text(reference.isEmpty ? '' : reference, style: AppTypography.captionStyle),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (reference.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Text('Payment ref  $reference', style: AppTypography.captionStyle),
-                  ],
-                  const SizedBox(height: AppSpacing.lg),
-                  if (success && booking?.pnr != null)
-                    TripGoButton(
-                      label: 'View e-ticket',
-                      icon: Icons.confirmation_number_rounded,
-                      onPressed: () => context.push('/ticket/${booking!.pnr}'),
-                    )
-                  else if (!success)
-                    TripGoButton(label: 'Retry payment', icon: Icons.refresh_rounded, onPressed: () => context.go('/payment/method')),
-                  const SizedBox(height: AppSpacing.md),
-                  TripGoOutlinedButton(
-                    label: 'Back to home',
-                    icon: Icons.home_rounded,
-                    onPressed: () {
-                      ref.read(bookingFlowProvider.notifier).clear();
-                      ref.read(passengersProvider.notifier).state = const [];
-                      ref.read(offerCodeProvider.notifier).state = '';
-                      ref.read(offerDiscountProvider.notifier).state = 0;
-                      context.go('/home');
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

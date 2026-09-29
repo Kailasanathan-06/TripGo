@@ -21,88 +21,134 @@ class PaymentMethodScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: const TripGoAppBar(title: 'Payment method'),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
-          if (booking != null)
-            TripGoCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 200,
+            backgroundColor: AppColors.background,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Row(
-                    children: [
-                      Icon(booking.transportType == 'bus' ? Icons.directions_bus_filled : Icons.train_rounded, color: AppColors.royalBlue),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(child: Text('${booking.source} Ã¢â€ â€™ ${booking.destination}', style: AppTypography.headingStyle)),
-                      TripGoStatusChip.fromState(booking.state),
-                    ],
+                  Image.network(
+                    'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Amount payable', style: AppTypography.labelStyle),
-                      Text(formatMoney(amount > 0 ? amount : booking.totalAmount), style: AppTypography.displayStyle),
-                    ],
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppColors.background.withOpacity(0.3),
+                          AppColors.background,
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: AppSpacing.lg),
-          Text('Choose a method', style: AppTypography.headingStyle),
-          const SizedBox(height: AppSpacing.md),
-          _MethodTile(
-            icon: Icons.qr_code_2_rounded,
-            title: 'UPI',
-            subtitle: 'Pay using any UPI app',
-            onTap: () {
-              ref.read(paymentMethodProvider.notifier).state = 'upi';
-              context.push('/payment/app');
-            },
           ),
-          _MethodTile(
-            icon: Icons.credit_card_rounded,
-            title: 'Credit / Debit Card',
-            subtitle: 'Visa, Mastercard, RuPay',
-            onTap: () {
-              ref.read(paymentMethodProvider.notifier).state = 'card';
-              context.push('/payment/web');
-            },
-          ),
-          _MethodTile(
-            icon: Icons.account_balance_rounded,
-            title: 'Net banking',
-            subtitle: 'All major banks',
-            onTap: () {
-              ref.read(paymentMethodProvider.notifier).state = 'netbanking';
-              context.push('/payment/web');
-            },
-          ),
-          _MethodTile(
-            icon: Icons.account_balance_wallet_rounded,
-            title: 'Wallet',
-            subtitle: 'TripGo wallet balance',
-            onTap: () {
-              ref.read(paymentMethodProvider.notifier).state = 'wallet';
-              context.push('/payment/web');
-            },
-          ),
-          _MethodTile(
-            icon: Icons.qr_code_scanner_rounded,
-            title: 'Scan & pay',
-            subtitle: 'Pay by scanning a QR code',
-            onTap: () {
-              ref.read(paymentMethodProvider.notifier).state = 'qr';
-              context.push('/payment/qr');
-            },
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              const Icon(Icons.lock_outline_rounded, size: 16, color: AppColors.success),
-              const SizedBox(width: AppSpacing.sm),
-              Text('Payments are processed securely via TripGo safe gateway.', style: AppTypography.captionStyle),
-            ],
+          SliverPadding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                if (booking != null)
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: AppColors.gradient,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      boxShadow: const [AppShadows.card],
+                    ),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(booking.transportType == 'bus' ? Icons.directions_bus_filled : Icons.train_rounded, color: AppColors.white),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(child: Text('${booking.source} Ã¢â€ â€™ ${booking.destination}', style: AppTypography.headingStyle.copyWith(color: AppColors.white))),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: AppColors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                              child: Text('Pending', style: AppTypography.captionStyle.copyWith(color: AppColors.white)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Amount payable', style: AppTypography.labelStyle.copyWith(color: AppColors.white.withOpacity(0.7))),
+                            Text(formatMoney(amount > 0 ? amount : booking.totalAmount), style: AppTypography.displayStyle.copyWith(color: AppColors.white)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.xl),
+                Text('Choose a method', style: AppTypography.headingStyle),
+                const SizedBox(height: AppSpacing.md),
+                _MethodTile(
+                  icon: Icons.qr_code_2_rounded,
+                  title: 'UPI',
+                  subtitle: 'Pay using any UPI app',
+                  onTap: () {
+                    ref.read(paymentMethodProvider.notifier).state = 'upi';
+                    context.push('/payment/app');
+                  },
+                ),
+                _MethodTile(
+                  icon: Icons.credit_card_rounded,
+                  title: 'Credit / Debit Card',
+                  subtitle: 'Visa, Mastercard, RuPay',
+                  onTap: () {
+                    ref.read(paymentMethodProvider.notifier).state = 'card';
+                    context.push('/payment/web');
+                  },
+                ),
+                _MethodTile(
+                  icon: Icons.account_balance_rounded,
+                  title: 'Net banking',
+                  subtitle: 'All major banks',
+                  onTap: () {
+                    ref.read(paymentMethodProvider.notifier).state = 'netbanking';
+                    context.push('/payment/web');
+                  },
+                ),
+                _MethodTile(
+                  icon: Icons.account_balance_wallet_rounded,
+                  title: 'Wallet',
+                  subtitle: 'TripGo wallet balance',
+                  onTap: () {
+                    ref.read(paymentMethodProvider.notifier).state = 'wallet';
+                    context.push('/payment/web');
+                  },
+                ),
+                _MethodTile(
+                  icon: Icons.qr_code_scanner_rounded,
+                  title: 'Scan & pay',
+                  subtitle: 'Pay by scanning a QR code',
+                  onTap: () {
+                    ref.read(paymentMethodProvider.notifier).state = 'qr';
+                    context.push('/payment/qr');
+                  },
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.lock_outline_rounded, size: 16, color: AppColors.success),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text('Payments are processed securely via TripGo safe gateway.', style: AppTypography.captionStyle),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+              ]),
+            ),
           ),
         ],
       ),
@@ -122,29 +168,58 @@ class _MethodTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: TripGoCard(
-        onTap: onTap,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(color: AppColors.lightBlue, shape: BoxShape.circle),
-              child: Icon(icon, color: AppColors.royalBlue, size: 24),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.border.withOpacity(0.5),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Material(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
                 children: [
-                  Text(title, style: AppTypography.bodyMedium),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: AppTypography.captionStyle),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.cyanGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: AppColors.white, size: 28),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: AppTypography.headingStyle),
+                        const SizedBox(height: 4),
+                        Text(subtitle, style: AppTypography.captionStyle),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.royalBlue, size: 16),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
-          ],
+          ),
         ),
       ),
     );

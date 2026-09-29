@@ -148,7 +148,7 @@ class Command(BaseCommand):
         for pair in CITY_PAIRS:
             src_name, dst_name = pair
             src, dst = city_map[src_name], city_map[dst_name]
-            for _ in range(2):
+            for _ in range(10):
                 op_name, bus_type, is_ac, is_sleeper, amenities = rng.choice(BUS_OPERATORS)
                 bus = Bus.objects.create(
                     name=f"{op_name} {src_name}-{dst_name}",
@@ -196,40 +196,39 @@ class Command(BaseCommand):
 
     def seed_trains(self):
         rng = random.Random(11)
-        i = 0
-        for num, name, ttype, days in TRAINS:
-            pair = CITY_PAIRS[i % len(CITY_PAIRS)]
-            src, dst = pair
-            src_stn = Station.objects.filter(city__name=src, kind__in=["train", "both"]).first()
-            dst_stn = Station.objects.filter(city__name=dst, kind__in=["train", "both"]).first()
+        for pair in CITY_PAIRS:
+            src_name, dst_name = pair
+            src_stn = Station.objects.filter(city__name=src_name, kind__in=["train", "both"]).first()
+            dst_stn = Station.objects.filter(city__name=dst_name, kind__in=["train", "both"]).first()
             if not src_stn or not dst_stn:
-                i += 1
                 continue
-            train = Train.objects.create(number=num, name=name, train_type=ttype, runs_on=days, rating=round(rng.uniform(3.8, 4.7), 1))
-            dep_seconds = rng.choice([360, 540, 720, 1140]) * 60
-            duration = rng.choice([330, 390, 450, 510, 600])
-            TrainStation.objects.create(train=train, station=src_stn, order=1, departure_time=_to_time(dep_seconds), platform=str(rng.randint(1, 6)))
-            TrainStation.objects.create(train=train, station=dst_stn, order=2, arrival_time=_to_time((dep_seconds + duration * 60) % 86400), platform=str(rng.randint(1, 6)), distance_km=rng.randint(300, 700))
-            for offset in range(7):
-                d = date.today() + timedelta(days=offset)
-                if str(d.isoweekday()) not in days:
-                    continue
-                schedule = TrainSchedule.objects.create(
-                    train=train,
-                    source_station=src_stn,
-                    destination_station=dst_stn,
-                    travel_date=d,
-                    duration_minutes=duration,
-                    distance_km=rng.randint(300, 700),
-                    base_fare=0,
-                )
-                created_coaches = []
-                for cls in ("SL", "3A", "2A", "CC"):
-                    total, letter, fee = CLASS_BERTHS[cls]
-                    coach = TrainCoach.objects.create(schedule=schedule, name=f"{letter}{rng.randint(1, 9)}", coach_class=cls, total_berths=0, class_fare=CLASS_BERTHS[cls][2], available=0)
-                    created_coaches.append(coach)
-                    self.create_berths(coach, total, rng)
-            i += 1
+            
+            # Generate 5 trains per pair
+            for _ in range(5):
+                num, name, ttype, days = rng.choice(TRAINS)
+                train = Train.objects.create(number=str(rng.randint(10000, 99999)), name=f"{name} ({src_name} - {dst_name})", train_type=ttype, runs_on="1234567", rating=round(rng.uniform(3.8, 4.7), 1))
+                dep_seconds = rng.choice([360, 540, 720, 1140, 480, 600, 900]) * 60
+                duration = rng.choice([330, 390, 450, 510, 600])
+                TrainStation.objects.create(train=train, station=src_stn, order=1, departure_time=_to_time(dep_seconds), platform=str(rng.randint(1, 6)))
+                TrainStation.objects.create(train=train, station=dst_stn, order=2, arrival_time=_to_time((dep_seconds + duration * 60) % 86400), platform=str(rng.randint(1, 6)), distance_km=rng.randint(300, 700))
+                
+                for offset in range(7):
+                    d = date.today() + timedelta(days=offset)
+                    schedule = TrainSchedule.objects.create(
+                        train=train,
+                        source_station=src_stn,
+                        destination_station=dst_stn,
+                        travel_date=d,
+                        duration_minutes=duration,
+                        distance_km=rng.randint(300, 700),
+                        base_fare=0,
+                    )
+                    created_coaches = []
+                    for cls in ("SL", "3A", "2A", "CC"):
+                        total, letter, fee = CLASS_BERTHS[cls]
+                        coach = TrainCoach.objects.create(schedule=schedule, name=f"{letter}{rng.randint(1, 9)}", coach_class=cls, total_berths=0, class_fare=CLASS_BERTHS[cls][2], available=0)
+                        created_coaches.append(coach)
+                        self.create_berths(coach, total, rng)
 
     def create_berths(self, coach, count, rng):
         berths, booked = [], 0
