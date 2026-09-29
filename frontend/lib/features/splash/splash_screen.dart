@@ -29,8 +29,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   String? _error;
   bool _retrying = false;
 
-  static const _maxAutoAttempts = 3;
-  static const _retryDelay = Duration(seconds: 2);
+  static const _maxAutoAttempts = 0;
+  static const _retryDelay = Duration(seconds: 1);
 
   @override
   void initState() {
@@ -50,7 +50,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> _bootstrap({int attempt = 1}) async {
     try {
-      await ApiBootstrap.ensureReady(onProgress: _setStatus);
+      await ApiBootstrap.ensureReady(
+        healthTimeout: const Duration(seconds: 4),
+        onProgress: _setStatus,
+      );
     } on ApiBootstrapException catch (e) {
       if (!mounted) return;
       if (attempt <= _maxAutoAttempts) {
