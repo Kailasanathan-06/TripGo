@@ -195,7 +195,7 @@ class _BootStatusState extends State<_BootStatus> {
   @override
   void initState() {
     super.initState();
-    _ipController.text = ApiBootstrap.baseUrl;
+    _ipController.text = '';
   }
 
   @override
@@ -226,7 +226,9 @@ class _BootStatusState extends State<_BootStatus> {
               controller: _ipController,
               style: const TextStyle(color: AppColors.white),
               decoration: InputDecoration(
-                labelText: 'Server API URL',
+                labelText: 'Server IP Address (e.g. 192.168.1.33)',
+                hintText: '192.168.1.33',
+                hintStyle: TextStyle(color: AppColors.white.withOpacity(0.3)),
                 labelStyle: TextStyle(color: AppColors.white.withOpacity(0.7)),
                 filled: true,
                 fillColor: AppColors.white.withOpacity(0.1),
@@ -239,7 +241,10 @@ class _BootStatusState extends State<_BootStatus> {
           const SizedBox(height: AppSpacing.md),
           FilledButton.icon(
             onPressed: widget.retrying ? null : () {
-              ApiBootstrap.updateBaseUrl(_ipController.text);
+              final ip = _ipController.text.trim();
+              if (ip.isNotEmpty) {
+                ApiBootstrap.updateBaseUrl('http://$ip:8000/api/');
+              }
               widget.onRetry();
             },
             icon: const Icon(Icons.refresh_rounded, size: 18),

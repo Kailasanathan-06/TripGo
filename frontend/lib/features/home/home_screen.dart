@@ -102,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
                           child: TripGoButton(
                             label: 'Search Bus',
                             icon: Icons.directions_bus_filled,
-                            onPressed: () => context.push('/search/results/bus'),
+                            onPressed: () => context.push('/search'),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -110,7 +110,7 @@ class HomeScreen extends ConsumerWidget {
                           child: TripGoButton(
                             label: 'Search Train',
                             icon: Icons.train_rounded,
-                            onPressed: () => context.push('/search/results/train'),
+                            onPressed: () => context.push('/search'),
                           ),
                         ),
                       ],
