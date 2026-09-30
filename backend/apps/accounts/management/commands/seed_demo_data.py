@@ -4,12 +4,12 @@ from datetime import date, time, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from apps.accounts.models import SavedPassenger, User
-from apps.buses.models import Bus, BusSchedule, BusSeat
-from apps.cities.models import City, Station
-from apps.notifications.models import Notification
-from apps.offers.models import Offer
-from apps.trains.models import Train, TrainBerth, TrainCoach, TrainSchedule, TrainStation
+from ....accounts.models import SavedPassenger, User
+from ....buses.models import Bus, BusSchedule, BusSeat
+from ....cities.models import City, Station
+from ....notifications.models import Notification
+from ....offers.models import Offer
+from ....trains.models import Train, TrainBerth, TrainCoach, TrainSchedule, TrainStation
 
 CITIES = [
     ("Chennai", "Tamil Nadu"),
@@ -131,9 +131,9 @@ class Command(BaseCommand):
         with transaction.atomic():
             for m in (BusSeat, BusSchedule, Bus, Station, City, TrainStation, TrainBerth, TrainCoach, TrainSchedule, Train, Offer, Notification, SavedPassenger):
                 m.objects.all().delete()
-            from apps.tickets.models import Ticket
-            from apps.bookings.models import Booking, BookingPassenger, BookingSeat
-            from apps.payments.models import Payment
+            from ....tickets.models import Ticket
+            from ....bookings.models import Booking, BookingPassenger, BookingSeat
+            from ....payments.models import Payment
 
             BookingPassenger.objects.all().delete()
             BookingSeat.objects.all().delete()
