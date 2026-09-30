@@ -195,15 +195,25 @@ class _PassengerForm extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Gender', style: AppTypography.captionStyle),
-                      const SizedBox(height: 6),
-                      SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'M', label: Text('M')),
-                          ButtonSegment(value: 'F', label: Text('F')),
-                          ButtonSegment(value: 'O', label: Text('O')),
+                      Row(
+                        children: [
+                          for (final g in const ['M', 'F', 'O'])
+                            GestureDetector(
+                              onTap: () => onGender(g),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: gender == g ? AppColors.royalBlue : AppColors.background,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: gender == g ? AppColors.royalBlue : AppColors.border),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(g, style: AppTypography.bodyMedium.copyWith(color: gender == g ? AppColors.white : AppColors.textPrimary)),
+                              ),
+                            ),
                         ],
-                        selected: {gender},
-                        onSelectionChanged: (s) => onGender(s.first),
                       ),
                     ],
                   ),

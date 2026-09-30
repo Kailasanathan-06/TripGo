@@ -54,8 +54,8 @@ class ApiBootstrap {
     if (_configured) return;
     _attempted = true;
 
-    // Configure the base URL immediately – it is static on all platforms.
-    _setBaseUrl(AppConstants.apiBaseUrl);
+    // Configure the base URL (uses user-updated URL if available, else default).
+    _setBaseUrl(_baseUrl);
     onProgress?.call('Connecting to TripGo server…');
 
     await _awaitHealthy(healthTimeout, onProgress);

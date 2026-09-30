@@ -81,25 +81,29 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     final popular = _results.where((r) => r.popular).take(4).toList();
     return Scaffold(
       appBar: TripGoAppBar(title: widget.mode == 'source' ? 'Select source' : 'Select destination'),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: TripGoSearchField(hint: 'Search city or station', onChanged: _onQueryChanged),
-          ),
-          Expanded(
-            child: _query.trim().isEmpty
-                ? _defaultView(popular)
-                : _loading && _results.isEmpty
-                    ? const TripGoLoading()
-                    : _results.isEmpty
-                        ? const TripGoEmptyState(icon: Icons.location_off_outlined, title: 'No cities found', message: 'Try a different search.')
-                        : ListView.builder(
-                            itemCount: _results.length,
-                            itemBuilder: (_, i) => _resultTile(_results[i]),
-                          ),
-          ),
-        ],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: TripGoSearchField(hint: 'Search city or station', onChanged: _onQueryChanged),
+            ),
+            Expanded(
+              child: _query.trim().isEmpty
+                  ? _defaultView(popular)
+                  : _loading && _results.isEmpty
+                      ? const TripGoLoading()
+                      : _results.isEmpty
+                          ? const TripGoEmptyState(icon: Icons.location_off_outlined, title: 'No cities found', message: 'Try a different search.')
+                          : ListView.builder(
+                              itemCount: _results.length,
+                              itemBuilder: (_, i) => _resultTile(_results[i]),
+                            ),
+            ),
+          ],
+        ),
       ),
     );
   }
