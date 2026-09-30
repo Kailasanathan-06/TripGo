@@ -113,7 +113,7 @@ class PaymentResultScreen extends ConsumerWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('${booking.source} Ã¢â€ â€™ ${booking.destination}', style: AppTypography.headingStyle),
+                                  Text('${booking.source} → ${booking.destination}', style: AppTypography.headingStyle),
                                   const SizedBox(height: 4),
                                   Text(success && booking.pnr != null ? 'PNR: ${booking.pnr}' : 'Booking ID: #${booking.id}', style: AppTypography.bodyStyle.copyWith(color: AppColors.royalBlue)),
                                 ],

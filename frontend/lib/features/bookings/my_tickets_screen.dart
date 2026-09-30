@@ -63,7 +63,7 @@ class MyTicketsScreen extends ConsumerWidget {
                   ),
                 );
               },
-              orElse: () => const SliverToBoxAdapter(child: TripGoLoading(message: 'Loading your ticketsÃ¢â‚¬Â¦')),
+              orElse: () => const SliverToBoxAdapter(child: TripGoLoading(message: 'Loading your tickets…')),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
           ],
@@ -95,7 +95,7 @@ class _PendingPayments extends ConsumerWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text('${b.source} Ã¢â€ â€™ ${b.destination} Ã‚Â· ${b.totalAmount.toStringAsFixed(0)}', style: AppTypography.bodyStyle),
+                      child: Text('${b.source} → ${b.destination} · ${b.totalAmount.toStringAsFixed(0)}', style: AppTypography.bodyStyle),
                     ),
                     TripGoOutlinedButton(
                       label: 'Pay now',

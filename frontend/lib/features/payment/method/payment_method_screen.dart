@@ -70,7 +70,7 @@ class PaymentMethodScreen extends ConsumerWidget {
                           children: [
                             Icon(booking.transportType == 'bus' ? Icons.directions_bus_filled : Icons.train_rounded, color: AppColors.white),
                             const SizedBox(width: AppSpacing.sm),
-                            Expanded(child: Text('${booking.source} Ã¢â€ â€™ ${booking.destination}', style: AppTypography.headingStyle.copyWith(color: AppColors.white))),
+                            Expanded(child: Text('${booking.source} → ${booking.destination}', style: AppTypography.headingStyle.copyWith(color: AppColors.white))),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(color: AppColors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),

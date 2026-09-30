@@ -339,7 +339,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> with 
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(passengers[i].fullName, style: AppTypography.titleStyle)),
-                                            Text('${passengers[i].age} yrs â€¢ ${passengers[i].gender}', style: AppTypography.smallStyle),
+                                            Text('${passengers[i].age} yrs • ${passengers[i].gender}', style: AppTypography.smallStyle),
                                           ],
                                         ),
                                       ),

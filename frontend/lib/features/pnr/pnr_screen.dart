@@ -99,7 +99,7 @@ class _PnrScreenState extends ConsumerState<PnrScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(t.pnr, style: AppTypography.bodyMedium.copyWith(letterSpacing: 1.2)),
-                                      Text('${t.payload['source'] ?? ''} Ã¢â€ â€™ ${t.payload['destination'] ?? ''}', style: AppTypography.captionStyle),
+                                      Text('${t.payload['source'] ?? ''} → ${t.payload['destination'] ?? ''}', style: AppTypography.captionStyle),
                                     ],
                                   ),
                                 ),

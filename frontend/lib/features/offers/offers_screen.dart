@@ -39,7 +39,7 @@ class OffersScreen extends ConsumerWidget {
                   ],
                 ),
           error: (e, __) => TripGoErrorState(message: '$e', onRetry: () => ref.invalidate(offersProvider)),
-          loading: () => const TripGoLoading(message: 'Loading offersÃ¢â‚¬Â¦'),
+          loading: () => const TripGoLoading(message: 'Loading offers…'),
         ),
       ),
     );

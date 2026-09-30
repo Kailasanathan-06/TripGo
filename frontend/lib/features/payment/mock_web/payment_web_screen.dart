@@ -83,7 +83,7 @@ class _PaymentWebScreenState extends ConsumerState<PaymentWebScreen> {
                             Expanded(child: TripGoTextField(label: 'Expiry', controller: _expiry, hint: 'MM/YY')),
                             const SizedBox(width: AppSpacing.md),
                             Expanded(
-                              child: TripGoTextField(label: 'CVV', controller: _cvv, hint: 'Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢', obscure: true, keyboardType: TextInputType.number),
+                              child: TripGoTextField(label: 'CVV', controller: _cvv, hint: '•••', obscure: true, keyboardType: TextInputType.number),
                             ),
                           ],
                         ),
