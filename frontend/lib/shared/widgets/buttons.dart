@@ -10,6 +10,9 @@ class TripGoButton extends StatelessWidget {
   final bool loading;
   final IconData? icon;
   final Gradient? gradient;
+  final double? width;
+  final double height;
+  final EdgeInsetsGeometry? padding;
 
   const TripGoButton({
     super.key,
@@ -18,6 +21,9 @@ class TripGoButton extends StatelessWidget {
     this.loading = false,
     this.icon,
     this.gradient,
+    this.width,
+    this.height = 52,
+    this.padding,
   });
 
   @override
@@ -52,7 +58,14 @@ class TripGoButton extends StatelessWidget {
           ),
           child: InkWell(
             onTap: enabled ? onPressed : null,
-            child: SizedBox(height: 52, width: double.infinity, child: Center(child: child)),
+            child: SizedBox(
+              height: height,
+              width: width ?? double.infinity,
+              child: Padding(
+                padding: padding ?? const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Center(child: child),
+              ),
+            ),
           ),
         ),
       ),

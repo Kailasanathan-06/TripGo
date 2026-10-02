@@ -191,7 +191,7 @@ class TripGoBusCard extends StatelessWidget {
                   departure: formatTime(schedule.boardingTime),
                   arrival: formatTime(schedule.droppingTime),
                   duration: schedule.durationText,
-                  route: '${schedule.sourceCity} â†’ ${schedule.destinationCity}',
+                  route: '${schedule.sourceCity} → ${schedule.destinationCity}',
                   icon: const Icon(Icons.directions_bus_filled, size: 22, color: AppColors.royalBlue),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -199,7 +199,7 @@ class TripGoBusCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.verified_user_outlined, size: 14, color: AppColors.success),
                     const SizedBox(width: 4),
-                    Flexible(child: Text(bus.amenities.take(3).join(' Â· '), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Flexible(child: Text(bus.amenities.take(3).join(' · '), style: AppTypography.captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
                     const Spacer(),
                     Flexible(
                       child: Text('${schedule.availableSeats} seats left',
@@ -262,7 +262,7 @@ class TripGoTrainCard extends StatelessWidget {
                         Row(
                           children: [
                             Text(train.number, style: AppTypography.smallStyle.copyWith(color: Colors.white70)),
-                            Text(' Â· ${train.trainType}', style: AppTypography.smallStyle.copyWith(color: Colors.white70)),
+                            Text(' · ${train.trainType}', style: AppTypography.smallStyle.copyWith(color: Colors.white70)),
                             const SizedBox(width: AppSpacing.sm),
                             const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
                             Text(train.rating.toStringAsFixed(1), style: AppTypography.captionStyle.copyWith(color: Colors.white70)),
@@ -283,7 +283,7 @@ class TripGoTrainCard extends StatelessWidget {
                   departure: schedule.sourceStationName.split(' ').first,
                   arrival: schedule.destinationStationName.split(' ').first,
                   duration: schedule.durationText,
-                  route: '${schedule.sourceStationName} â†’ ${schedule.destinationStationName}',
+                  route: '${schedule.sourceStationName} → ${schedule.destinationStationName}',
                   icon: const Icon(Icons.departure_board_rounded, size: 22, color: AppColors.royalBlue),
                 ),
                 const SizedBox(height: AppSpacing.md),

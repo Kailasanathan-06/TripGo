@@ -8,7 +8,7 @@ import 'buttons.dart';
 class TripGoLoading extends StatelessWidget {
   final String message;
 
-  const TripGoLoading({super.key, this.message = 'Loadingâ€¦'});
+  const TripGoLoading({super.key, this.message = 'Loading...'});
 
   @override
   Widget build(BuildContext context) {

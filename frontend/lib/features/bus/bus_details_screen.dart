@@ -68,7 +68,7 @@ class _BusDetailsScreenState extends ConsumerState<BusDetailsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${bus.operator} Â· ${bus.busType.replaceAll('_', ' ')}',
+                            Text('${bus.operator} · ${bus.busType.replaceAll('_', ' ')}',
                                 style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
                             const SizedBox(height: 4),
                             Text(bus.name, style: AppTypography.captionStyle.copyWith(color: AppColors.lightBlue)),
@@ -76,7 +76,7 @@ class _BusDetailsScreenState extends ConsumerState<BusDetailsScreen> {
                             Row(
                               children: [
                                 const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-                                Text(' ${bus.rating.toStringAsFixed(1)} Â· ${schedule.reviewsCount} reviews',
+                                Text(' ${bus.rating.toStringAsFixed(1)} · ${schedule.reviewsCount} reviews',
                                     style: AppTypography.smallStyle.copyWith(color: AppColors.white)),
                               ],
                             ),
@@ -811,13 +811,34 @@ class _SeatSummaryBar extends ConsumerWidget {
           ],
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(formatMoney((flow?.unitFare ?? 0) * count), style: AppTypography.titleStyle),
+                  Text(
+                    'Total Amount',
+                    style: AppTypography.captionStyle.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    formatMoney((flow?.unitFare ?? 0) * count),
+                    style: AppTypography.headingStyle.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
@@ -826,13 +847,17 @@ class _SeatSummaryBar extends ConsumerWidget {
                       else
                         const Icon(Icons.info_outline_rounded, color: AppColors.royalBlue, size: 14),
                       const SizedBox(width: 4),
-                      Text(
-                        enough
-                            ? '$count of $passengers seats selected'
-                            : 'Select ${passengers - count} more seat${passengers - count > 1 ? 's' : ''}',
-                        style: AppTypography.captionStyle.copyWith(
-                          color: enough ? AppColors.success : AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          enough
+                              ? '$count of $passengers seats selected'
+                              : 'Select ${passengers - count} more seat${passengers - count > 1 ? 's' : ''}',
+                          style: AppTypography.captionStyle.copyWith(
+                            color: enough ? AppColors.success : AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -840,7 +865,10 @@ class _SeatSummaryBar extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(width: AppSpacing.md),
             TripGoButton(
+              width: 140,
+              height: 48,
               label: 'Continue',
               icon: Icons.arrow_forward_rounded,
               onPressed: enough

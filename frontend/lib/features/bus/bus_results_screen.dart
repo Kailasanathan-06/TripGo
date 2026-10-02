@@ -74,7 +74,7 @@ class _BusSearchResultsScreenState extends ConsumerState<BusSearchResultsScreen>
                     children: [
                       Expanded(
                         child: Text(
-                          '${sorted.length} bus${sorted.length > 1 ? 'es' : ''} Â· ${query.source} â†’ ${query.destination}',
+                          '${sorted.length} bus${sorted.length > 1 ? 'es' : ''} · ${query.source} → ${query.destination}',
                           style: AppTypography.captionStyle,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -268,7 +268,7 @@ class _TrainSearchResultsScreenState extends ConsumerState<TrainSearchResultsScr
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
                   child: Text(
-                    '${sorted.length} train${sorted.length > 1 ? 's' : ''} Â· ${query.source} â†’ ${query.destination}',
+                    '${sorted.length} train${sorted.length > 1 ? 's' : ''} · ${query.source} → ${query.destination}',
                     style: AppTypography.captionStyle,
                   ),
                 ),

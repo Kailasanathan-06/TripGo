@@ -99,7 +99,7 @@ class _PassengerScreenState extends ConsumerState<PassengerScreen> {
                 border: Border.all(color: AppColors.royalBlue.withValues(alpha: 0.2)),
               ),
               child: Text(
-                '${flow.route}\n${flow.travelDateLabel} Â· ${flow.selectedSeats.join(', ')}',
+                '${flow.route}\n${flow.travelDateLabel} · ${flow.selectedSeats.join(', ')}',
                 style: AppTypography.captionStyle,
                 maxLines: 2,
               ),

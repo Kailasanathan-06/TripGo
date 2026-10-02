@@ -231,7 +231,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> with 
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           FittedBox(fit: BoxFit.scaleDown, child: Text(flow.departure, style: AppTypography.displayStyle.copyWith(fontSize: 24, color: AppColors.darkNavy))),
-                                          FittedBox(fit: BoxFit.scaleDown, child: Text(flow.route.split('â†’').first.trim(), style: AppTypography.captionStyle)),
+                                          FittedBox(fit: BoxFit.scaleDown, child: Text(flow.route.split(' → ').first.trim(), style: AppTypography.captionStyle)),
                                         ],
                                       ),
                                     ),
@@ -253,7 +253,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> with 
                                         crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           FittedBox(fit: BoxFit.scaleDown, child: Text(flow.arrival, style: AppTypography.displayStyle.copyWith(fontSize: 24, color: AppColors.darkNavy))),
-                                          FittedBox(fit: BoxFit.scaleDown, child: Text(flow.route.split('â†’').last.trim(), style: AppTypography.captionStyle)),
+                                          FittedBox(fit: BoxFit.scaleDown, child: Text(flow.route.split(' → ').last.trim(), style: AppTypography.captionStyle)),
                                         ],
                                       ),
                                     ),
@@ -379,6 +379,8 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> with 
                                   ),
                                   const SizedBox(width: AppSpacing.sm),
                                   TripGoButton(
+                                    width: 90,
+                                    height: 48,
                                     label: 'Apply',
                                     onPressed: _validatingCoupon ? null : _validateCoupon,
                                   ),

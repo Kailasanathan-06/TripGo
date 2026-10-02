@@ -66,7 +66,7 @@ class _TrainDetailsScreenState extends ConsumerState<TrainDetailsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${train.number} Â· ${train.name}', style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
+                            Text('${train.number} · ${train.name}', style: AppTypography.headingStyle.copyWith(color: AppColors.white)),
                             const SizedBox(height: 4),
                             Row(
                               children: [
@@ -91,7 +91,7 @@ class _TrainDetailsScreenState extends ConsumerState<TrainDetailsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 6),
-                                  Text('${schedule.durationText} Â· ${schedule.distanceKm.toStringAsFixed(0)} km', style: AppTypography.captionStyle),
+                                  Text('${schedule.durationText} · ${schedule.distanceKm.toStringAsFixed(0)} km', style: AppTypography.captionStyle),
                                   const SizedBox(height: 6),
                                   Row(
                                     children: [
@@ -230,7 +230,7 @@ class _TrainCoachesScreenState extends ConsumerState<TrainCoachesScreen> {
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              Text('${schedule.train.name} Â· ${schedule.train.number}', style: AppTypography.captionStyle),
+              Text('${schedule.train.name} · ${schedule.train.number}', style: AppTypography.captionStyle),
               const SizedBox(height: AppSpacing.md),
               for (final coach in classes)
                 Padding(
@@ -323,7 +323,7 @@ class _TrainBerthsScreenState extends ConsumerState<TrainBerthsScreen> {
       coachId: widget.coachId,
       vehicleName: sc.train.name,
       vehicleNumber: sc.train.number,
-      route: '${sc.sourceStationName} â†’ ${sc.destinationStationName}',
+      route: '${sc.sourceStationName} → ${sc.destinationStationName}',
       travelDateLabel: formatShortDate(query.date),
       departure: sc.sourceStationCode.isEmpty ? sc.sourceStationName : sc.sourceStationCode,
       arrival: sc.destinationStationCode.isEmpty ? sc.destinationStationName : sc.destinationStationCode,
@@ -993,13 +993,34 @@ class _TrainSeatSummaryBar extends ConsumerWidget {
           ],
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(formatMoney(fare * count), style: AppTypography.titleStyle),
+                  Text(
+                    'Total Amount',
+                    style: AppTypography.captionStyle.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    formatMoney(fare * count),
+                    style: AppTypography.headingStyle.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
@@ -1008,13 +1029,17 @@ class _TrainSeatSummaryBar extends ConsumerWidget {
                       else
                         const Icon(Icons.info_outline_rounded, color: AppColors.royalBlue, size: 14),
                       const SizedBox(width: 4),
-                      Text(
-                        enough
-                            ? '$count of $passengers berths selected'
-                            : 'Select ${passengers - count} more berth${passengers - count > 1 ? 's' : ''}',
-                        style: AppTypography.captionStyle.copyWith(
-                          color: enough ? AppColors.success : AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          enough
+                              ? '$count of $passengers berths selected'
+                              : 'Select ${passengers - count} more berth${passengers - count > 1 ? 's' : ''}',
+                          style: AppTypography.captionStyle.copyWith(
+                            color: enough ? AppColors.success : AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1022,7 +1047,10 @@ class _TrainSeatSummaryBar extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(width: AppSpacing.md),
             TripGoButton(
+              width: 140,
+              height: 48,
               label: 'Continue',
               icon: Icons.arrow_forward_rounded,
               onPressed: enough ? () => context.push('/passengers') : null,
