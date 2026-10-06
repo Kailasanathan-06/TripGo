@@ -48,7 +48,7 @@ class ApiBootstrap {
   /// requests. On failure an [ApiBootstrapException] is thrown so the splash
   /// screen can show a retry button.
   static Future<void> ensureReady({
-    Duration healthTimeout = const Duration(seconds: 30),
+    Duration healthTimeout = const Duration(seconds: 5),
     void Function(String message)? onProgress,
   }) async {
     if (_configured) return;
@@ -92,8 +92,8 @@ class ApiBootstrap {
     final probe = Dio(
       BaseOptions(
         baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 8),
+        connectTimeout: const Duration(seconds: 2),
+        receiveTimeout: const Duration(seconds: 2),
       ),
     );
     final deadline = DateTime.now().add(timeout);
